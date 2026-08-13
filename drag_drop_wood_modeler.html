@@ -26,10 +26,10 @@
       border-bottom: 1px solid #3a3a3c; padding-bottom: 8px; margin-bottom: 12px;
     }
     h3 { margin: 0; color: #e5a93c; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
-    
+
     .section { margin-bottom: 12px; }
     label { font-size: 11px; color: #a1a1a6; display: block; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    
+
     select, button, input {
       width: 100%; min-height: 42px; padding: 8px 12px; margin-bottom: 6px; border-radius: 8px;
       border: 1px solid #3a3a3c; background: #2c2c2e; color: #fff;
@@ -40,7 +40,7 @@
     button:hover:not(:disabled) { background: #0071e3; }
     button:active:not(:disabled) { transform: scale(0.98); }
     button:disabled { opacity: 0.35; cursor: not-allowed; }
-    
+
     button.help-btn { background: #30d158; color: #000; font-size: 12px; min-height: 32px; padding: 4px 10px; border-radius: 6px; width: auto; }
     button.secondary { background: #3a3a3c; color: #f2f2f7; }
     button.secondary:hover:not(:disabled) { background: #48484a; }
@@ -228,7 +228,7 @@
     <div class="modal-box" style="width:640px;">
       <h2>📋 Workshop Bill of Materials & Cut List</h2>
       <p style="font-size:12px; color:#a1a1a6; margin-top:-6px;">Calculated dimensions, material grouping, and total lumber board footage.</p>
-      
+
       <div id="parts-table-container">
         <!-- Dynamic Parts Table -->
       </div>
@@ -367,7 +367,7 @@
       document.getElementById('snap-btn').addEventListener('click', toggleSnapMode);
       document.getElementById('path-mode-btn').addEventListener('click', togglePathMode);
       document.getElementById('finish-path-btn').addEventListener('click', executePathDuplication);
-      
+
       document.getElementById('mode-translate').addEventListener('click', () => transformControls.setMode("translate"));
       document.getElementById('mode-rotate').addEventListener('click', () => transformControls.setMode("rotate"));
 
@@ -493,14 +493,14 @@
     // --- INDIVIDUAL PART SPAWNER ---
     function addWoodPartInternal(preset, customPosition = null) {
       const group = new THREE.Group();
-      
+
       const geo = new THREE.BoxGeometry(preset.w, preset.h, preset.d);
       const matKey = preset.species && SPECIES[preset.species] ? preset.species : "PINE";
-      const mat = new THREE.MeshStandardMaterial({ 
+      const mat = new THREE.MeshStandardMaterial({
         color: SPECIES[matKey].color,
-        roughness: 0.7 
+        roughness: 0.7
       });
-      
+
       const mainMesh = new THREE.Mesh(geo, mat);
       mainMesh.castShadow = true;
       mainMesh.receiveShadow = true;
@@ -905,7 +905,7 @@
 
         for (let j = 1; j <= copies; j++) {
           const spawnPos = pStart.clone().add(dir.clone().multiplyScalar(step * j));
-          
+
           const clonedPreset = {
             name: selectedPart.userData.name + " (Copy)",
             w: selectedPart.userData.dimensions.w,
@@ -914,7 +914,7 @@
             species: "PLYWOOD",
             desc: selectedPart.userData.description
           };
-          
+
           const newGroup = addWoodPartInternal(clonedPreset, spawnPos);
           newGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
         }
