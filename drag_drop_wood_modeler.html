@@ -2,1159 +2,1169 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Drag and Drop Wood 3D Modeler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>3D Scout Wood Modeler & Cut List Generator</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; touch-action: manipulation; }
     body {
-      margin: 0;
-      overflow: hidden;
-      background: #171923;
-      color: #edf2f7;
-      font-family: Arial, sans-serif;
+      margin: 0; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #18181a; color: #f2f2f7; user-select: none; -webkit-user-select: none;
     }
+    #canvas-container { width: 100vw; height: 100vh; }
 
-    #viewer {
-      width: 100vw;
-      height: 100vh;
+    /* Control Panel UI */
+    #ui-panel {
+      position: absolute; top: 16px; left: 16px; width: 340px;
+      background: rgba(28, 28, 30, 0.94); border: 1px solid #3a3a3c;
+      padding: 16px; border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+      max-height: calc(100vh - 32px); overflow-y: auto; backdrop-filter: blur(12px);
+      z-index: 10; transition: transform 0.3s ease, bottom 0.3s ease;
     }
-
-    .panel {
-      position: absolute;
-      top: 14px;
-      bottom: 14px;
-      left: 14px;
-      width: 340px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 14px;
-      border: 1px solid #4a5568;
-      border-radius: 8px;
-      background: rgba(26, 32, 44, 0.92);
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
-      overflow: auto;
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #3a3a3c; padding-bottom: 8px; margin-bottom: 12px;
     }
-
-    h1 {
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.2;
+    h3 { margin: 0; color: #e5a93c; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+    
+    .section { margin-bottom: 12px; }
+    label { font-size: 11px; color: #a1a1a6; display: block; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    select, button, input {
+      width: 100%; min-height: 42px; padding: 8px 12px; margin-bottom: 6px; border-radius: 8px;
+      border: 1px solid #3a3a3c; background: #2c2c2e; color: #fff;
+      font-size: 13px; font-weight: 500; transition: all 0.15s ease;
     }
+    select:focus, input:focus { outline: none; border-color: #0a84ff; background: #3a3a3c; }
+    button { background: #0a84ff; font-weight: 600; cursor: pointer; border: none; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    button:hover:not(:disabled) { background: #0071e3; }
+    button:active:not(:disabled) { transform: scale(0.98); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; }
+    
+    button.help-btn { background: #30d158; color: #000; font-size: 12px; min-height: 32px; padding: 4px 10px; border-radius: 6px; width: auto; }
+    button.secondary { background: #3a3a3c; color: #f2f2f7; }
+    button.secondary:hover:not(:disabled) { background: #48484a; }
+    button.parts-btn { background: #e5a93c; color: #000; font-weight: 700; }
+    button.parts-btn:hover:not(:disabled) { background: #d4982b; }
+    button.export-btn { background: #64d2ff; color: #000; font-weight: 700; }
+    button.danger { background: #ff453a; }
+    button.danger:hover:not(:disabled) { background: #d73328; }
+    button.active { background: #30d158; color: #000; font-weight: 700; }
+    .row { display: flex; gap: 6px; }
 
-    h2 {
-      margin: 0 0 8px;
-      font-size: 14px;
-      color: #cbd5e0;
+    /* Drawer Toggle for Mobile */
+    #drawer-toggle { display: none; }
+
+    /* Hover & Mobile Inspector Tooltip */
+    #tooltip {
+      position: absolute; display: none; pointer-events: none;
+      background: rgba(18, 18, 18, 0.95); border: 1px solid #e5a93c; padding: 10px 14px;
+      border-radius: 8px; font-size: 12px; line-height: 1.4; z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6); backdrop-filter: blur(8px);
     }
+    .tt-title { color: #e5a93c; font-weight: 700; font-size: 13px; }
+    .tt-tag { display: inline-block; background: #3a3a3c; color: #d1d1d6; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; }
 
-    p {
-      margin: 0;
-      color: #a0aec0;
-      font-size: 13px;
-      line-height: 1.4;
+    /* Modals */
+    .modal-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 2000;
+      display: flex; justify-content: center; align-items: center; padding: 16px;
     }
-
-    .section {
-      padding-top: 10px;
-      border-top: 1px solid #4a5568;
+    .modal-box {
+      background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 14px;
+      width: 580px; max-width: 100%; max-height: 85vh; overflow-y: auto; padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
     }
+    .modal-box h2, .modal-box h3 { margin-top: 0; color: #e5a93c; border-bottom: 1px solid #3a3a3c; padding-bottom: 8px; }
+    .step-item { margin-bottom: 12px; font-size: 13px; line-height: 1.5; color: #d1d1d6; }
+    .step-item strong { color: #fff; }
+    .badge { background: #2c2c2e; border: 1px solid #3a3a3c; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #64d2ff; }
 
-    .palette {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
+    /* Parts List Table */
+    .parts-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; text-align: left; }
+    .parts-table th, .parts-table td { padding: 8px 10px; border-bottom: 1px solid #3a3a3c; }
+    .parts-table th { background: #2c2c2e; color: #e5a93c; font-weight: 700; }
+    .parts-table td { color: #f2f2f7; }
+    .parts-summary { background: #2c2c2e; padding: 12px; border-radius: 8px; border: 1px solid #3a3a3c; font-size: 13px; margin-top: 12px; }
 
-    .tile,
-    button {
-      min-height: 38px;
-      border: 1px solid #4a5568;
-      border-radius: 6px;
-      background: #2d3748;
-      color: #edf2f7;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    .tile {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      font-size: 13px;
-      text-align: center;
-      user-select: none;
-    }
-
-    .tile:hover,
-    button:hover {
-      border-color: #90cdf4;
-      background: #35445a;
-    }
-
-    .presets {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .option-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      align-items: end;
-    }
-
-    .check-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 38px;
-      padding: 8px;
-      border: 1px solid #4a5568;
-      border-radius: 6px;
-      background: #111827;
-      color: #edf2f7;
-      font-size: 13px;
-    }
-
-    .check-row input {
-      width: auto;
-      margin: 0;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-
-    label {
-      display: block;
-      color: #cbd5e0;
-      font-size: 12px;
-    }
-
-    input,
-    select {
-      width: 100%;
-      margin-top: 4px;
-      padding: 8px;
-      border: 1px solid #4a5568;
-      border-radius: 6px;
-      background: #111827;
-      color: #edf2f7;
-      font: inherit;
-    }
-
-    .wide {
-      grid-column: 1 / -1;
-    }
-
-    .parts-list {
-      display: grid;
-      gap: 6px;
-      max-height: 210px;
-      overflow: auto;
-    }
-
-    .part-row {
-      display: grid;
-      grid-template-columns: 54px 1fr 86px;
-      gap: 8px;
-      padding: 8px;
-      border: 1px solid #3b4658;
-      border-radius: 6px;
-      background: rgba(17, 24, 39, 0.72);
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .part-row:hover,
-    .part-row.selected {
-      border-color: #90cdf4;
-      background: rgba(45, 55, 72, 0.9);
-    }
-
-    .part-row strong {
-      color: #fbd38d;
-    }
-
-    .row-actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-
-    .row-actions button {
-      min-height: 28px;
-      padding: 0;
-      font-size: 12px;
-    }
-
-    .part-row.locked strong::after {
-      content: " locked";
-      color: #a0aec0;
-      font-weight: normal;
-    }
-
-    .selected-name {
-      min-height: 18px;
-      margin-bottom: 8px;
-      color: #fbd38d;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .support-warning {
-      display: none;
-      margin-top: 10px;
-      padding: 10px 12px;
-      border: 1px solid #f6ad55;
-      border-radius: 6px;
-      background: rgba(116, 66, 16, 0.35);
-      color: #feebc8;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .support-warning strong {
-      display: block;
-      margin-bottom: 4px;
-      color: #fbd38d;
-    }
-
-    .danger {
-      border-color: #fc8181;
-      color: #fed7d7;
-    }
-
-    .primary {
-      border-color: #90cdf4;
-      color: #ebf8ff;
-    }
-
-    .hint {
-      position: absolute;
-      right: 16px;
-      bottom: 16px;
-      max-width: 360px;
-      padding: 12px 14px;
-      border: 1px solid #4a5568;
-      border-radius: 8px;
-      background: rgba(26, 32, 44, 0.88);
-      color: #cbd5e0;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .part-tooltip {
-      position: absolute;
-      z-index: 20;
-      display: none;
-      max-width: 280px;
-      padding: 10px 12px;
-      border: 1px solid #90cdf4;
-      border-radius: 6px;
-      background: rgba(17, 24, 39, 0.94);
-      color: #edf2f7;
-      font-size: 12px;
-      line-height: 1.35;
-      pointer-events: none;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .part-tooltip strong {
-      display: block;
-      margin-bottom: 4px;
-      color: #fbd38d;
-      font-size: 13px;
-    }
-
-    @media (max-width: 760px) {
-      .panel {
-        right: 10px;
-        left: 10px;
-        width: auto;
-        max-height: 48vh;
+    /* Mobile Adaptations */
+    @media (max-width: 768px) {
+      #ui-panel {
+        top: auto; bottom: 0; left: 0; width: 100vw;
+        max-height: 60vh; border-radius: 18px 18px 0 0; border: none;
+        border-top: 1px solid #3a3a3c; box-shadow: 0 -10px 30px rgba(0,0,0,0.7);
+        transform: translateY(calc(100% - 56px));
       }
-
-      .hint {
-        right: 10px;
-        left: 10px;
-        bottom: 10px;
-        max-width: none;
+      #ui-panel.open { transform: translateY(0); }
+      #drawer-toggle {
+        display: block; width: 40px; height: 5px; background: #48484a;
+        border-radius: 3px; margin: 0 auto 10px auto; cursor: pointer;
       }
+      .modal-box { padding: 16px; }
     }
   </style>
-</head>
-<body>
-  <aside class="panel">
-    <div>
-      <h1>Wood 3D Modeler</h1>
-      <p>Drag a part onto the floor grid, then drag the 3D part to move it. Use presets to start with a shelf, tabletop shelf, table, or chair.</p>
-    </div>
 
-    <div class="section">
-      <h2>Drag Parts</h2>
-      <div class="palette">
-        <div class="tile" draggable="true" data-kind="plywood-panel">Plywood Panel</div>
-        <div class="tile" draggable="true" data-kind="shelf">Shelf Board</div>
-        <div class="tile" draggable="true" data-kind="leg">Table/Chair Leg</div>
-        <div class="tile" draggable="true" data-kind="cleat">Cleat/Apron</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Add Custom Board</h2>
-      <div class="form-grid">
-        <label>Width
-          <input id="widthInput" type="number" min="0.25" step="0.25" value="24">
-        </label>
-        <label>Height
-          <input id="heightInput" type="number" min="0.25" step="0.25" value="0.75">
-        </label>
-        <label>Depth
-          <input id="depthInput" type="number" min="0.25" step="0.25" value="12">
-        </label>
-        <label class="wide">Material
-          <select id="materialInput">
-            <option value="plywood">Plywood</option>
-            <option value="pine">Pine</option>
-            <option value="skid">2x Lumber</option>
-            <option value="painted">Painted</option>
-          </select>
-        </label>
-        <button id="addCustomButton" class="wide">Add Board at Center</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Presets</h2>
-      <div class="presets">
-        <button id="loadShelfButton">Shelf A</button>
-        <button id="loadTabletopShelfButton">Tabletop Shelf</button>
-        <button id="loadBookcaseButton">Bookcase</button>
-        <button id="loadWorkbenchButton">Workbench</button>
-        <button id="loadShoeRackButton">Shoe Rack</button>
-        <button id="loadCubbiesButton">Storage Cubbies</button>
-        <button id="loadTableButton">Simple Table</button>
-        <button id="loadChairButton">Simple Chair</button>
-        <button id="clearButton">Clear</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Alignment</h2>
-      <div class="option-row">
-        <label class="check-row">
-          <input id="snapToggle" type="checkbox" checked>
-          Snap to grid
-        </label>
-        <label class="check-row">
-          <input id="autoLockToggle" type="checkbox">
-          Auto lock after move
-        </label>
-        <label>Grid step
-          <input id="snapStepInput" type="number" min="0.25" step="0.25" value="0.75">
-        </label>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Selected Part</h2>
-      <div id="selectedName" class="selected-name">No part selected</div>
-      <div class="form-grid">
-        <label>Width
-          <input id="selectedWidth" type="number" min="0.25" step="0.25">
-        </label>
-        <label>Height
-          <input id="selectedHeight" type="number" min="0.25" step="0.25">
-        </label>
-        <label>Depth
-          <input id="selectedDepth" type="number" min="0.25" step="0.25">
-        </label>
-        <button id="applySizeButton" class="wide primary">Apply Size</button>
-      </div>
-      <div class="form-grid" style="margin-top: 8px;">
-        <label>X position
-          <input id="selectedX" type="number" step="0.25">
-        </label>
-        <label>Y position
-          <input id="selectedY" type="number" step="0.25">
-        </label>
-        <label>Z position
-          <input id="selectedZ" type="number" step="0.25">
-        </label>
-        <button id="applyPositionButton" class="wide primary">Apply Position</button>
-      </div>
-      <div class="actions">
-        <button id="rotateYButton">Rotate 90</button>
-        <button id="rotateXButton">Stand/Flip 90</button>
-        <button id="snapSelectedButton">Snap Selected</button>
-        <button id="lowerBraceButton">Lower Brace Height</button>
-        <button id="fitBetweenLegsButton">Fit Between Legs</button>
-        <button id="lockPartButton">Lock Part</button>
-        <button id="duplicateButton">Duplicate</button>
-        <button id="deletePartButton" class="danger">Delete Part</button>
-      </div>
-      <div id="supportWarning" class="support-warning"></div>
-    </div>
-
-    <div class="section">
-      <h2>Export</h2>
-      <button id="exportHtmlButton" class="wide primary">Export Current Model HTML</button>
-    </div>
-
-    <div class="section">
-      <h2>Parts in Model</h2>
-      <div id="partsList" class="parts-list"></div>
-    </div>
-  </aside>
-
-  <main id="viewer"></main>
-
-  <div class="hint">
-    Select a part, type exact X/Y/Z positions, then lock it. Snap to grid keeps parts aligned while dragging.
-  </div>
-  <div id="partTooltip" class="part-tooltip"></div>
-
+  <!-- Three.js Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="woodshop3d.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <!-- Real-Time Hover / Touch Inspector -->
+  <div id="tooltip">
+    <div class="tt-title" id="tt-name">Part Name</div>
+    <div class="tt-tag" id="tt-type">Structural Component</div>
+    <div id="tt-dims">Dimensions: -</div>
+    <div id="tt-species">Species: -</div>
+    <div id="tt-bf">Board Footage: -</div>
+    <div id="tt-desc" style="font-style:italic; color:#a1a1a6; margin-top:4px; border-top:1px solid #2c2c2e; padding-top:4px;"></div>
+  </div>
+
+  <!-- Responsive Control Sidebar -->
+  <div id="ui-panel">
+    <div id="drawer-toggle" onclick="toggleDrawer()"></div>
+    <div class="panel-header">
+      <h3>🪵 Scout Wood Modeler</h3>
+      <button class="help-btn" id="open-help-btn">? Help</button>
+    </div>
+
+    <!-- History Controls -->
+    <div class="section">
+      <label>1. History Actions</label>
+      <div class="row">
+        <button id="undo-btn" class="secondary" disabled>↩️ Undo</button>
+        <button id="redo-btn" class="secondary" disabled>↪️ Redo</button>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="section">
+      <label>2. Presets & Models</label>
+      <select id="preset-select">
+        <optgroup label="🪑 Scout Assemblies (Click to Select Individual Parts)">
+          <option value="floor_shelf">Chemistry Lab floor shelf (92" Wide Shelf A - Skids, Divider, Shelves, Cleats, Backing)</option>
+          <option value="dining_table">Farmhouse Dining Table (Slab Top + 4x4 Corner Legs + Aprons)</option>
+          <option value="adirondack_chair">Adirondack Chair (Slatted Seat & Fan Backrest + Skids)</option>
+          <option value="wood_chair">Standard Dining Chair (Seat Pan + Corner Legs + Backrest)</option>
+          <option value="workbench">Heavy Duty Workbench (Worktop + 4x4 Legs + Bottom Deck)</option>
+          <option value="bookshelf">5-Tier Storage Bookshelf (Side Panels + Shelves + Toe Kick)</option>
+          <option value="cabinet_base">Kitchen Base Cabinet (Sides + Base Deck + Frame)</option>
+          <option value="garden_bench">Garden Park Bench (Seat & Back Slats + Leg Blocks)</option>
+          <option value="nightstand">Bedside Nightstand (Top + Deck + Corner Posts)</option>
+        </optgroup>
+        <optgroup label="🪵 Dimensional Framing Lumber">
+          <option value="2x4_board">2x4 Board (1.5" x 3.5" x 96")</option>
+          <option value="2x6_board">2x6 Board (1.5" x 5.5" x 96")</option>
+          <option value="4x4_post">4x4 Post (3.5" x 3.5" x 96")</option>
+          <option value="1x4_trim">1x4 Trim Board (0.75" x 3.5" x 72")</option>
+          <option value="1x2_cleat">1x2 Cleat Strip (0.75" x 1.5" x 48")</option>
+        </optgroup>
+        <optgroup label="📐 Sheet Goods & Panels">
+          <option value="plywood_34">3/4" Baltic Birch Plywood Sheet (4x8)</option>
+          <option value="plywood_12">1/2" Backer Plywood Sheet (4x8)</option>
+        </optgroup>
+      </select>
+      <button id="add-preset-btn">+ Spawn Selected Assembly/Stock</button>
+    </div>
+
+    <!-- Object Manipulation Controls -->
+    <div class="section">
+      <label>3. Move & Rotate Selected Part</label>
+      <div class="row">
+        <button id="mode-translate" class="secondary">Move (W)</button>
+        <button id="mode-rotate" class="secondary">Rotate (E)</button>
+      </div>
+
+      <label style="margin-top:10px;">4. Surface Lock & Attach</label>
+      <button id="snap-btn" class="secondary">Lock / Flush Attach Face</button>
+
+      <label style="margin-top:10px;">5. Multi-Point Array Copy</label>
+      <button id="path-mode-btn" class="secondary">Duplicate Along Path Points</button>
+      <div id="path-instructions" style="font-size:11px; color:#30d158; display:none; margin: 4px 0;">
+        Click 2 or more points in scene to draw path, then click Finish.
+      </div>
+      <button id="finish-path-btn" style="display:none; background:#30d158; color:#000;">Finish Path & Duplicate</button>
+
+      <label style="margin-top:10px;">6. Adjust Dimensions (Inches)</label>
+      <div class="row">
+        <input type="number" id="dim-w" placeholder="Width" step="0.25">
+        <input type="number" id="dim-h" placeholder="Height" step="0.25">
+        <input type="number" id="dim-d" placeholder="Depth" step="0.25">
+      </div>
+      <button id="apply-resize-btn" class="secondary">Apply New Size</button>
+
+      <button id="delete-btn" class="danger" style="margin-top:10px;">Delete Selected Part</button>
+    </div>
+
+    <!-- Cut List & Workspace Actions -->
+    <div class="section" style="border-top: 1px solid #3a3a3c; padding-top: 10px;">
+      <label>7. Cut List & Workspace Export</label>
+      <button id="open-parts-btn" class="parts-btn">📋 Generate Parts / Cut List</button>
+      <button id="export-html-btn" class="export-btn" style="margin-top:6px;">📤 Export Interactive 3D Model</button>
+      <button id="open-clear-modal-btn" class="danger" style="margin-top:6px;">🗑️ Clear Workspace</button>
+    </div>
+  </div>
+
+  <!-- Help Guide Modal -->
+  <div id="help-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h2>🪵 Scout Woodworking Modeler Guide</h2>
+      <div class="step-item"><strong>📱 Mobile Touch & Desktop Navigation:</strong> Single finger / Left-click to rotate camera. Two-finger pinch / Scroll wheel to zoom. Right-click / two-finger drag to pan across workshop floor.</div>
+      <div class="step-item"><strong>🎯 Selecting Sub-Components:</strong> Tap or click directly on any piece of wood (e.g., individual skids, cleats, shelf decks, or side panels) to select it. A <span class="badge">Cyan Outline</span> highlights your active piece.</div>
+      <div class="step-item"><strong>🔄 Moving & Rotating:</strong> Use <span class="badge">W</span> or tap <strong>Move</strong> to slide parts along 3D gizmo handles. Use <span class="badge">E</span> or tap <strong>Rotate</strong> to orient boards.</div>
+      <div class="step-item"><strong>📐 Custom Resizing:</strong> Select any board, type new Width, Height, or Depth values in inches, and tap <strong>Apply New Size</strong>.</div>
+      <div class="step-item"><strong>📋 Workshop Cut List:</strong> Tap <strong>Generate Parts / Cut List</strong> anytime to calculate quantities, exact cut dimensions, material species, and total board footage for trips to the lumber yard!</div>
+      <div class="step-item"><strong>↩️ Undo & Redo:</strong> Made a mistake? Tap <strong>Undo</strong> or press <span class="badge">⌘Z</span> / <span class="badge">Ctrl+Z</span> to step backwards.</div>
+      <button id="close-help-btn" style="margin-top:16px; padding:10px; font-size:14px; font-weight:bold;">Got it! Start Designing</button>
+    </div>
+  </div>
+
+  <!-- Parts List / Cut List Modal -->
+  <div id="parts-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="width:640px;">
+      <h2>📋 Workshop Bill of Materials & Cut List</h2>
+      <p style="font-size:12px; color:#a1a1a6; margin-top:-6px;">Calculated dimensions, material grouping, and total lumber board footage.</p>
+      
+      <div id="parts-table-container">
+        <!-- Dynamic Parts Table -->
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <button id="print-parts-btn" class="parts-btn">🖨️ Print Cut List</button>
+        <button id="close-parts-btn" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear Confirmation Modal -->
+  <div id="clear-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="width:380px; text-align:center;">
+      <h3 style="color:#ff453a; margin-top:0; border:none; justify-content:center; font-size:16px;">⚠️ Reset Entire Workspace?</h3>
+      <p style="font-size:13px; color:#d1d1d6; margin: 12px 0 20px 0;">Are you sure you want to clear all 3D wood parts? This action cannot be undone.</p>
+      <div class="row">
+        <button id="confirm-clear-btn" class="danger">Yes, Clear Sheet</button>
+        <button id="cancel-clear-btn" class="secondary">No, Keep Parts</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const viewer = WoodShop3D.createViewer({
-      container: "#viewer",
-      target: [0, 13, 0],
-      cameraPosition: [115, 80, 135]
-    });
-
-    const addedParts = [];
-    let partCounter = 1;
-    let draggedKind = null;
-    let selectedMesh = null;
-    let selectionBox = null;
-    let pointerStart = null;
-    const hoverRaycaster = new THREE.Raycaster();
-    const hoverPointer = new THREE.Vector2();
-    const partTooltip = document.getElementById("partTooltip");
-
-    function snapValue(value) {
-      const enabled = document.getElementById("snapToggle")?.checked;
-      const step = Number(document.getElementById("snapStepInput")?.value) || 0.75;
-      if (!enabled || step <= 0) return value;
-      return Math.round(value / step) * step;
-    }
-
-    function snapMesh(mesh) {
-      if (!mesh) return;
-      mesh.position.x = snapValue(mesh.position.x);
-      mesh.position.z = snapValue(mesh.position.z);
-    }
-
-    const partTemplates = {
-      "plywood-panel": {
-        name: "Plywood panel",
-        size: [24, 24, 0.75],
-        materialKey: "plywood"
-      },
-      shelf: {
-        name: "Shelf board",
-        size: [30, 0.75, 12],
-        materialKey: "plywood"
-      },
-      leg: {
-        name: "Leg",
-        size: [3.5, 30, 3.5],
-        materialKey: "skid"
-      },
-      cleat: {
-        name: "Cleat or apron",
-        size: [24, 1.5, 0.75],
-        materialKey: "pine"
-      }
+    // --- WOOD SPECIES & MATERIALS ---
+    const SPECIES = {
+      PINE: { name: "Douglas Fir / Pine", color: 0xc19a6b },
+      OAK: { name: "White Oak", color: 0xa38258 },
+      WALNUT: { name: "American Walnut", color: 0x5c4033 },
+      MAPLE: { name: "Hard Maple", color: 0xfaedcd },
+      PLYWOOD: { name: "Baltic Birch Plywood", color: 0xd4a373 },
+      SKID: { name: "Elevated Skid Lumber", color: 0xbc6c25 }
     };
 
-    function centerYFor(size) {
-      return size[1] / 2;
-    }
+    const PRESETS = {
+      "2x4_board": { name: "2x4 Board", w: 1.5, h: 3.5, d: 96, species: "PINE", desc: "Standard framing stud" },
+      "2x6_board": { name: "2x6 Board", w: 1.5, h: 5.5, d: 96, species: "PINE", desc: "Heavy joist & support beam" },
+      "4x4_post": { name: "4x4 Structural Post", w: 3.5, h: 3.5, d: 96, species: "PINE", desc: "Solid framing post" },
+      "1x4_trim": { name: "1x4 Trim Board", w: 0.75, h: 3.5, d: 72, species: "OAK", desc: "Hardwood trim stock" },
+      "1x2_cleat": { name: "1x2 Support Cleat Strip", w: 0.75, h: 1.5, d: 48, species: "MAPLE", desc: "Support runner batten" },
+      "plywood_34": { name: '3/4" Plywood Sheet', w: 48, h: 0.75, d: 96, species: "PLYWOOD", desc: "Cabinet grade panel sheet" },
+      "plywood_12": { name: '1/2" Plywood Sheet', w: 48, h: 0.50, d: 96, species: "PLYWOOD", desc: "Drawer & cabinet backer" }
+    };
 
-    function nextId(prefix) {
-      const id = prefix + partCounter;
-      partCounter += 1;
-      return id;
-    }
+    // --- GLOBAL VARIABLES ---
+    let scene, camera, renderer, orbitControls, transformControls;
+    let raycaster, mouse;
+    let woodParts = [];
+    let selectedPart = null;
+    let selectionBoxHelper = null;
+    let pathPoints = [];
+    let pathMarkerDots = [];
+    let isPathMode = false;
+    let isSnapMode = false;
 
-    function addPart(spec) {
-      const mesh = viewer.addBoard({
-        id: spec.id || nextId("B"),
-        name: spec.name || "Board",
-        size: spec.size,
-        position: spec.position,
-        materialKey: spec.materialKey || "plywood",
-        rotation: spec.rotation || [0, 0, 0],
-        draggable: spec.locked !== true
+    // History
+    let undoStack = [];
+    let redoStack = [];
+    let isBatchAction = false;
+
+    const container = document.getElementById('canvas-container');
+    const tooltip = document.getElementById('tooltip');
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x18181a);
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.set(100, 70, 120);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+      orbitControls.target.set(0, 12, 0);
+      orbitControls.enableDamping = true;
+      orbitControls.dampingFactor = 0.05;
+
+      transformControls = new THREE.TransformControls(camera, renderer.domElement);
+      transformControls.addEventListener('dragging-changed', (e) => {
+        orbitControls.enabled = !e.value;
+        if (!e.value) {
+          saveState();
+        }
       });
-      mesh.userData.locked = spec.locked === true;
-      addedParts.push(mesh);
-      renderPartsList();
-      return mesh;
-    }
+      scene.add(transformControls);
 
-    function addTemplate(kind, x, z) {
-      const template = partTemplates[kind];
-      const size = template.size.slice();
-      const mesh = addPart({
-        id: nextId(kind.charAt(0).toUpperCase()),
-        name: template.name,
-        size: size,
-        position: [x, centerYFor(size), z],
-        materialKey: template.materialKey
+      // Lighting
+      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+      dirLight.position.set(90, 130, 90);
+      dirLight.castShadow = true;
+      scene.add(dirLight);
+
+      // Floor Grid
+      const grid = new THREE.GridHelper(200, 50, 0x3a3a3c, 0x2c2c2e);
+      scene.add(grid);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      // Listeners
+      window.addEventListener('resize', onWindowResize);
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+
+      window.addEventListener('keydown', (e) => {
+        const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+        if (isCmdOrCtrl && e.key.toLowerCase() === 'z') {
+          if (e.shiftKey) redo();
+          else undo();
+          e.preventDefault();
+        } else if (isCmdOrCtrl && e.key.toLowerCase() === 'y') {
+          redo();
+          e.preventDefault();
+        } else if (e.key === "w" || e.key === "W") {
+          transformControls.setMode("translate");
+        } else if (e.key === "e" || e.key === "E") {
+          transformControls.setMode("rotate");
+        } else if (e.key === "Delete" || e.key === "Backspace") {
+          deleteSelected();
+        }
       });
-      setSelected(mesh);
+
+      // UI Actions
+      document.getElementById('undo-btn').addEventListener('click', undo);
+      document.getElementById('redo-btn').addEventListener('click', redo);
+      document.getElementById('add-preset-btn').addEventListener('click', spawnSelectedPreset);
+      document.getElementById('delete-btn').addEventListener('click', deleteSelected);
+      document.getElementById('apply-resize-btn').addEventListener('click', applyResize);
+      document.getElementById('snap-btn').addEventListener('click', toggleSnapMode);
+      document.getElementById('path-mode-btn').addEventListener('click', togglePathMode);
+      document.getElementById('finish-path-btn').addEventListener('click', executePathDuplication);
+      
+      document.getElementById('mode-translate').addEventListener('click', () => transformControls.setMode("translate"));
+      document.getElementById('mode-rotate').addEventListener('click', () => transformControls.setMode("rotate"));
+
+      document.getElementById('open-help-btn').addEventListener('click', () => document.getElementById('help-modal').style.display = "flex");
+      document.getElementById('close-help-btn').addEventListener('click', () => document.getElementById('help-modal').style.display = "none");
+
+      document.getElementById('open-parts-btn').addEventListener('click', generatePartsList);
+      document.getElementById('close-parts-btn').addEventListener('click', () => document.getElementById('parts-modal').style.display = "none");
+      document.getElementById('print-parts-btn').addEventListener('click', printPartsList);
+
+      document.getElementById('open-clear-modal-btn').addEventListener('click', () => document.getElementById('clear-modal').style.display = "flex");
+      document.getElementById('cancel-clear-btn').addEventListener('click', () => document.getElementById('clear-modal').style.display = "none");
+      document.getElementById('confirm-clear-btn').addEventListener('click', clearEntireScene);
+
+      document.getElementById('export-html-btn').addEventListener('click', exportStandaloneHTML);
+
+      // Default Spawn: Chemistry Lab floor shelf A
+      spawnFurnitureAssembly("floor_shelf");
+
+      animate();
     }
 
-    function partToSpec(mesh) {
-      const part = mesh.userData.part;
-      return {
-        id: part.id,
-        name: part.name,
-        size: part.size.slice(),
-        position: [mesh.position.x, mesh.position.y, mesh.position.z],
-        rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z],
-        materialKey: part.materialKey || "plywood",
-        locked: mesh.userData.locked === true
+    // --- DRAWER TOGGLE (FOR MOBILE) ---
+    function toggleDrawer() {
+      const panel = document.getElementById('ui-panel');
+      panel.classList.toggle('open');
+    }
+
+    // --- UNDO / REDO ---
+    function captureStateSnapshot() {
+      return woodParts.map(group => {
+        return {
+          name: group.userData.name,
+          dimensions: { ...group.userData.dimensions },
+          speciesName: group.userData.species,
+          type: group.userData.type,
+          description: group.userData.description,
+          pos: { x: group.position.x, y: group.position.y, z: group.position.z },
+          quat: { x: group.quaternion.x, y: group.quaternion.y, z: group.quaternion.z, w: group.quaternion.w }
+        };
+      });
+    }
+
+    function saveState() {
+      if (isBatchAction) return;
+      const snapshot = captureStateSnapshot();
+      undoStack.push(JSON.stringify(snapshot));
+      if (undoStack.length > 40) undoStack.shift();
+      redoStack = [];
+      updateUndoRedoUI();
+    }
+
+    function updateUndoRedoUI() {
+      document.getElementById('undo-btn').disabled = undoStack.length <= 1;
+      document.getElementById('redo-btn').disabled = redoStack.length === 0;
+    }
+
+    function undo() {
+      if (undoStack.length <= 1) return;
+      const currentState = undoStack.pop();
+      redoStack.push(currentState);
+      const previousState = undoStack[undoStack.length - 1];
+      applyStateSnapshot(JSON.parse(previousState));
+      updateUndoRedoUI();
+    }
+
+    function redo() {
+      if (redoStack.length === 0) return;
+      const nextState = redoStack.pop();
+      undoStack.push(nextState);
+      applyStateSnapshot(JSON.parse(nextState));
+      updateUndoRedoUI();
+    }
+
+    function removeHighlight() {
+      if (selectionBoxHelper) {
+        scene.remove(selectionBoxHelper);
+        selectionBoxHelper.geometry.dispose();
+        selectionBoxHelper = null;
+      }
+    }
+
+    function applyStateSnapshot(snapshotData) {
+      transformControls.detach();
+      removeHighlight();
+
+      woodParts.forEach(group => {
+        scene.remove(group);
+        group.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+          }
+        });
+      });
+      woodParts = [];
+      selectedPart = null;
+
+      isBatchAction = true;
+      snapshotData.forEach(item => {
+        let matchedKey = "PINE";
+        for (let k in SPECIES) {
+          if (SPECIES[k].name === item.speciesName) matchedKey = k;
+        }
+
+        const preset = {
+          name: item.name,
+          w: item.dimensions.w,
+          h: item.dimensions.h,
+          d: item.dimensions.d,
+          species: matchedKey,
+          desc: item.description
+        };
+
+        const newGroup = addWoodPartInternal(preset, new THREE.Vector3(item.pos.x, item.pos.y, item.pos.z));
+        newGroup.quaternion.set(item.quat.x, item.quat.y, item.quat.z, item.quat.w);
+      });
+      isBatchAction = false;
+      tooltip.style.display = "none";
+    }
+
+    // --- INDIVIDUAL PART SPAWNER ---
+    function addWoodPartInternal(preset, customPosition = null) {
+      const group = new THREE.Group();
+      
+      const geo = new THREE.BoxGeometry(preset.w, preset.h, preset.d);
+      const matKey = preset.species && SPECIES[preset.species] ? preset.species : "PINE";
+      const mat = new THREE.MeshStandardMaterial({ 
+        color: SPECIES[matKey].color,
+        roughness: 0.7 
+      });
+      
+      const mainMesh = new THREE.Mesh(geo, mat);
+      mainMesh.castShadow = true;
+      mainMesh.receiveShadow = true;
+
+      const edges = new THREE.EdgesGeometry(geo);
+      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x5c3d2e, linewidth: 1 }));
+      mainMesh.add(line);
+
+      group.add(mainMesh);
+
+      group.userData = {
+        name: preset.name || "Wood Component",
+        dimensions: { w: preset.w, h: preset.h, d: preset.d },
+        species: SPECIES[matKey].name,
+        description: preset.desc || "",
+        type: preset.w > 20 ? "Sheet / Panel" : "Dimensional Lumber"
       };
-    }
 
-    function formatSize(size) {
-      return size.map(function (value) {
-        return Number(value).toFixed(2).replace(/\.00$/, "");
-      }).join(" x ");
-    }
-
-    function supportWarningsFor(mesh) {
-      if (!mesh) return [];
-      const part = mesh.userData.part;
-      const size = part.size;
-      const name = (part.name || "").toLowerCase();
-      const material = (part.materialKey || "").toLowerCase();
-      const width = Math.max(size[0], size[2]);
-      const thickness = Math.min(size[0], size[1], size[2]);
-      const isFlatBoard = size[1] <= 1.6 && size[0] >= 12 && size[2] >= 8;
-      const isShelfLike = isFlatBoard || name.includes("shelf") || name.includes("top") || name.includes("bottom");
-      const isFloorLevel = mesh.position.y - size[1] / 2 <= 2.5;
-      const warnings = [];
-
-      if (isShelfLike && width >= 18 && !name.includes("cleat") && !name.includes("stiffener") && !name.includes("apron")) {
-        warnings.push("Add cleats under both sides of this shelf/panel so it has ledges to sit on.");
-      }
-
-      if (isShelfLike && width >= 30 && thickness <= 0.85 && !name.includes("stiffener")) {
-        warnings.push("Add a front stiffener bar/lip for this long thin span to reduce sagging.");
-      }
-
-      if (isFloorLevel && (name.includes("bottom") || name.includes("base") || isShelfLike) && material !== "skid") {
-        warnings.push("Add base skids under this bottom piece if the project sits on the floor or a damp surface.");
-      }
-
-      return warnings;
-    }
-
-    function supportWarningHtml(mesh) {
-      const warnings = supportWarningsFor(mesh);
-      if (!warnings.length) return "";
-      return "<strong>Support check</strong>" + warnings.map(function (warning) {
-        return "Warning: " + warning;
-      }).join("<br>");
-    }
-
-    function tooltipHtml(mesh) {
-      const part = mesh.userData.part;
-      const warningHtml = supportWarningHtml(mesh);
-      return (
-        "<strong>" + part.id + " - " + part.name + "</strong>" +
-        "Size: " + formatSize(part.size) + " in<br>" +
-        "Position: " + Number(mesh.position.x.toFixed(2)) + ", " + Number(mesh.position.y.toFixed(2)) + ", " + Number(mesh.position.z.toFixed(2)) + "<br>" +
-        "Material: " + (part.materialKey || "plywood") + (mesh.userData.locked ? "<br>Locked in place" : "") +
-        (part.notes ? "<br>" + part.notes : "") +
-        (warningHtml ? "<br>" + warningHtml : "")
-      );
-    }
-
-    function setSelected(mesh) {
-      selectedMesh = mesh || null;
-
-      if (selectionBox) {
-        viewer.scene.remove(selectionBox);
-        selectionBox = null;
-      }
-
-      if (selectedMesh) {
-        selectionBox = new THREE.BoxHelper(selectedMesh, 0x90cdf4);
-        viewer.scene.add(selectionBox);
-      }
-
-      syncSelectedPanel();
-      renderPartsList();
-    }
-
-    function syncSelectedPanel() {
-      const name = document.getElementById("selectedName");
-      const width = document.getElementById("selectedWidth");
-      const height = document.getElementById("selectedHeight");
-      const depth = document.getElementById("selectedDepth");
-      const x = document.getElementById("selectedX");
-      const y = document.getElementById("selectedY");
-      const z = document.getElementById("selectedZ");
-      const lockButton = document.getElementById("lockPartButton");
-      const supportWarning = document.getElementById("supportWarning");
-
-      if (!selectedMesh) {
-        name.textContent = "No part selected";
-        width.value = "";
-        height.value = "";
-        depth.value = "";
-        x.value = "";
-        y.value = "";
-        z.value = "";
-        lockButton.textContent = "Lock Part";
-        supportWarning.style.display = "none";
-        supportWarning.innerHTML = "";
-        return;
-      }
-
-      const part = selectedMesh.userData.part;
-      name.textContent = part.id + " - " + part.name + (selectedMesh.userData.locked ? " (locked)" : "");
-      width.value = part.size[0];
-      height.value = part.size[1];
-      depth.value = part.size[2];
-      x.value = Number(selectedMesh.position.x.toFixed(3));
-      y.value = Number(selectedMesh.position.y.toFixed(3));
-      z.value = Number(selectedMesh.position.z.toFixed(3));
-      lockButton.textContent = selectedMesh.userData.locked ? "Unlock Part" : "Lock Part";
-      const warningHtml = supportWarningHtml(selectedMesh);
-      supportWarning.style.display = warningHtml ? "block" : "none";
-      supportWarning.innerHTML = warningHtml;
-    }
-
-    function replaceSelectedWith(spec) {
-      if (!selectedMesh) return;
-      const index = addedParts.indexOf(selectedMesh);
-      viewer.removeBoard(selectedMesh);
-      const mesh = viewer.addBoard(Object.assign({}, spec, { draggable: spec.locked !== true }));
-      mesh.userData.locked = spec.locked === true;
-
-      if (index >= 0) {
-        addedParts[index] = mesh;
+      if (customPosition) {
+        group.position.copy(customPosition);
       } else {
-        addedParts.push(mesh);
+        group.position.set(0, preset.h / 2 + 2, 0);
       }
 
-      setSelected(mesh);
+      scene.add(group);
+      woodParts.push(group);
+      selectPart(group);
+      return group;
     }
 
-    function clearModel() {
-      setSelected(null);
-      while (addedParts.length) {
-        const mesh = addedParts.pop();
-        viewer.removeBoard(mesh);
+    // --- POPULAR FURNITURE & STRUCTURE SPAWNER ---
+    function spawnFurnitureAssembly(type) {
+      isBatchAction = true;
+
+      if (type === "floor_shelf") {
+        // Chemistry Lab Storage Shelf A (92" W × 23.25" D × 25.5" H)
+        addWoodPartInternal({ name: "Base Skid Runner (Left)", w: 3.5, h: 1.5, d: 23.25, species: "SKID", desc: "2x4 Base Elevation Skid (P11)" }, new THREE.Vector3(-44.25, 0.75, 0));
+        addWoodPartInternal({ name: "Base Skid Runner (Center)", w: 3.5, h: 1.5, d: 23.25, species: "SKID", desc: "2x4 Base Elevation Skid (P11)" }, new THREE.Vector3(0, 0.75, 0));
+        addWoodPartInternal({ name: "Base Skid Runner (Right)", w: 3.5, h: 1.5, d: 23.25, species: "SKID", desc: "2x4 Base Elevation Skid (P11)" }, new THREE.Vector3(44.25, 0.75, 0));
+
+        addWoodPartInternal({ name: "Bottom Panel (P2)", w: 92, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Base Panel' }, new THREE.Vector3(0, 1.875, 0));
+
+        addWoodPartInternal({ name: "Left Side Panel (P4)", w: 0.75, h: 22.5, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Left Side Panel' }, new THREE.Vector3(-45.625, 13.5, 0));
+        addWoodPartInternal({ name: "Right Side Panel (P5)", w: 0.75, h: 22.5, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Right Side Panel' }, new THREE.Vector3(45.625, 13.5, 0));
+
+        const dividerX = -15.375;
+        addWoodPartInternal({ name: "Center Divider (P6)", w: 0.75, h: 22.5, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Interior Divider' }, new THREE.Vector3(dividerX, 13.5, 0));
+
+        addWoodPartInternal({ name: "Top Panel (P1)", w: 92, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Top Deck Surface' }, new THREE.Vector3(0, 25.125, 0));
+
+        addWoodPartInternal({ name: "Back Enclosure Panel (P3)", w: 92, h: 22.5, d: 0.75, species: "PLYWOOD", desc: '3/4" Raw Plywood Full-Width Back Panel' }, new THREE.Vector3(0, 13.5, -11.25));
+
+        const cleatYOffsets = [7.0, 12.5, 18.0];
+        const smallShelfX = -30.3125;
+        cleatYOffsets.forEach((y, i) => {
+          addWoodPartInternal({ name: `Left Support Cleat (Tier ${i+1} Left)`, w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(-44.875, y - 0.75, 1.625));
+          addWoodPartInternal({ name: `Left Support Cleat (Tier ${i+1} Right)`, w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(dividerX - 0.375, y - 0.75, 1.625));
+          addWoodPartInternal({ name: `Small Shelf Deck (Tier ${i+1} P8)`, w: 29.5, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Small Storage Shelf' }, new THREE.Vector3(smallShelfX, y + 0.375, 0));
+        });
+
+        const longCleatY = 16.0;
+        const longShelfX = 22.4375;
+        addWoodPartInternal({ name: "Right Support Cleat (Left)", w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(dividerX + 0.375, longCleatY - 0.75, 1.625));
+        addWoodPartInternal({ name: "Right Support Cleat (Right)", w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(44.875, longCleatY - 0.75, 1.625));
+
+        addWoodPartInternal({ name: "Long Shelf Deck (P7)", w: 60.25, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Wide Storage Shelf' }, new THREE.Vector3(longShelfX, longCleatY + 0.375, 0));
+        addWoodPartInternal({ name: "Stiffener Front Lip (P9)", w: 60.25, h: 1.5, d: 0.75, species: "MAPLE", desc: "1x2 Solid Pine Front Anti-Sag Lip" }, new THREE.Vector3(longShelfX, longCleatY - 0.375, 10.875));
+
+      } else if (type === "dining_table") {
+        addWoodPartInternal({ name: "Table Top Slab", w: 36, h: 1.5, d: 72, species: "WALNUT", desc: "Solid hardwood table slab" }, new THREE.Vector3(0, 30, 0));
+        addWoodPartInternal({ name: "Corner Leg (FL)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(-15, 14.25, -33));
+        addWoodPartInternal({ name: "Corner Leg (FR)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(15, 14.25, -33));
+        addWoodPartInternal({ name: "Corner Leg (BL)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(-15, 14.25, 33));
+        addWoodPartInternal({ name: "Corner Leg (BR)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(15, 14.25, 33));
+        addWoodPartInternal({ name: "Apron Rail (Front)", w: 30, h: 3.5, d: 0.75, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(0, 27.5, -33));
+        addWoodPartInternal({ name: "Apron Rail (Back)", w: 30, h: 3.5, d: 0.75, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(0, 27.5, 33));
+        addWoodPartInternal({ name: "Apron Rail (Side L)", w: 0.75, h: 3.5, d: 66, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(-15, 27.5, 0));
+        addWoodPartInternal({ name: "Apron Rail (Side R)", w: 0.75, h: 3.5, d: 66, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(15, 27.5, 0));
+
+      } else if (type === "adirondack_chair") {
+        addWoodPartInternal({ name: "Base Leg Skid (L)", w: 1.5, h: 3.5, d: 32, species: "PINE", desc: "Ground runner skid" }, new THREE.Vector3(-11, 6, 0));
+        addWoodPartInternal({ name: "Base Leg Skid (R)", w: 1.5, h: 3.5, d: 32, species: "PINE", desc: "Ground runner skid" }, new THREE.Vector3(11, 6, 0));
+        addWoodPartInternal({ name: "Front Leg (L)", w: 1.5, h: 20, d: 3.5, species: "PINE", desc: "Front leg post" }, new THREE.Vector3(-11, 10, -12));
+        addWoodPartInternal({ name: "Front Leg (R)", w: 1.5, h: 20, d: 3.5, species: "PINE", desc: "Front leg post" }, new THREE.Vector3(11, 10, -12));
+        addWoodPartInternal({ name: "Wide Armrest (L)", w: 5.5, h: 0.75, d: 30, species: "PINE", desc: "Flat wide armrest" }, new THREE.Vector3(-12, 20, 0));
+        addWoodPartInternal({ name: "Wide Armrest (R)", w: 5.5, h: 0.75, d: 30, species: "PINE", desc: "Flat wide armrest" }, new THREE.Vector3(12, 20, 0));
+        for (let i = 0; i < 5; i++) {
+          addWoodPartInternal({ name: `Seat Slat #${i+1}`, w: 20, h: 0.75, d: 3.5, species: "PINE", desc: "Seat slat" }, new THREE.Vector3(0, 11 - (i * 0.8), -12 + (i * 4)));
+        }
+        for (let i = 0; i < 5; i++) {
+          addWoodPartInternal({ name: `Backrest Slat #${i+1}`, w: 3.5, h: 28, d: 0.75, species: "PINE", desc: "Fan backrest slat" }, new THREE.Vector3(-7 + (i * 3.5), 26, 12 + (i * 0.2)));
+        }
+
+      } else if (type === "wood_chair") {
+        addWoodPartInternal({ name: "Chair Seat Pan Deck", w: 18, h: 1.0, d: 18, species: "OAK", desc: "Solid hardwood seat pan" }, new THREE.Vector3(0, 18, 0));
+        addWoodPartInternal({ name: "Front Leg (L)", w: 1.5, h: 17.5, d: 1.5, species: "OAK", desc: "Front leg post" }, new THREE.Vector3(-7.5, 8.75, -7.5));
+        addWoodPartInternal({ name: "Front Leg (R)", w: 1.5, h: 17.5, d: 1.5, species: "OAK", desc: "Front leg post" }, new THREE.Vector3(7.5, 8.75, -7.5));
+        addWoodPartInternal({ name: "Rear Back Post (L)", w: 1.5, h: 36, d: 1.5, species: "OAK", desc: "Rear corner post" }, new THREE.Vector3(-7.5, 18, 7.5));
+        addWoodPartInternal({ name: "Rear Back Post (R)", w: 1.5, h: 36, d: 1.5, species: "OAK", desc: "Rear corner post" }, new THREE.Vector3(7.5, 18, 7.5));
+        addWoodPartInternal({ name: "Backrest Top Rail", w: 15, h: 4.0, d: 0.75, species: "OAK", desc: "Upper backrest lumbar support" }, new THREE.Vector3(0, 33, 7.5));
+
+      } else if (type === "workbench") {
+        addWoodPartInternal({ name: "Worktop Slab", w: 30, h: 2.0, d: 60, species: "MAPLE", desc: "Laminated hardwood workbench surface" }, new THREE.Vector3(0, 34, 0));
+        addWoodPartInternal({ name: "Corner Leg (FL)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(-12, 16, -26));
+        addWoodPartInternal({ name: "Corner Leg (FR)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(12, 16, -26));
+        addWoodPartInternal({ name: "Corner Leg (BL)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(-12, 16, 26));
+        addWoodPartInternal({ name: "Corner Leg (BR)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(12, 16, 26));
+        addWoodPartInternal({ name: "Bottom Shelf Deck", w: 24, h: 0.75, d: 52, species: "PLYWOOD", desc: "Lower tool storage deck" }, new THREE.Vector3(0, 8, 0));
+
+      } else if (type === "bookshelf") {
+        addWoodPartInternal({ name: "Side Panel (L)", w: 0.75, h: 72, d: 12, species: "PLYWOOD", desc: "Carcass side panel" }, new THREE.Vector3(-18, 36, 0));
+        addWoodPartInternal({ name: "Side Panel (R)", w: 0.75, h: 72, d: 12, species: "PLYWOOD", desc: "Carcass side panel" }, new THREE.Vector3(18, 36, 0));
+        addWoodPartInternal({ name: "Base Deck", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Bottom base deck" }, new THREE.Vector3(0, 3, 0));
+        addWoodPartInternal({ name: "Shelf Deck (Tier 2)", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Storage shelf" }, new THREE.Vector3(0, 20, 0));
+        addWoodPartInternal({ name: "Shelf Deck (Tier 3)", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Storage shelf" }, new THREE.Vector3(0, 38, 0));
+        addWoodPartInternal({ name: "Shelf Deck (Tier 4)", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Storage shelf" }, new THREE.Vector3(0, 56, 0));
+        addWoodPartInternal({ name: "Top Cover", w: 36, h: 0.75, d: 12, species: "PLYWOOD", desc: "Top carcass cover" }, new THREE.Vector3(0, 71.625, 0));
+
+      } else if (type === "cabinet_base") {
+        addWoodPartInternal({ name: "Cabinet Side (L)", w: 0.75, h: 34.5, d: 24, species: "PLYWOOD", desc: "Cabinet side" }, new THREE.Vector3(-12, 17.25, 0));
+        addWoodPartInternal({ name: "Cabinet Side (R)", w: 0.75, h: 34.5, d: 24, species: "PLYWOOD", desc: "Cabinet side" }, new THREE.Vector3(12, 17.25, 0));
+        addWoodPartInternal({ name: "Base Deck Shelf", w: 23.25, h: 0.75, d: 24, species: "PLYWOOD", desc: "Bottom deck" }, new THREE.Vector3(0, 3, 0));
+        addWoodPartInternal({ name: "Face Frame Stretcher", w: 23.25, h: 1.5, d: 0.75, species: "OAK", desc: "Upper stretcher" }, new THREE.Vector3(0, 33.75, 11.625));
+
+      } else if (type === "garden_bench") {
+        addWoodPartInternal({ name: "Seat Slat (Front)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor bench plank" }, new THREE.Vector3(0, 18, -5));
+        addWoodPartInternal({ name: "Seat Slat (Middle)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor bench plank" }, new THREE.Vector3(0, 18, 0));
+        addWoodPartInternal({ name: "Seat Slat (Rear)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor bench plank" }, new THREE.Vector3(0, 18, 5));
+        addWoodPartInternal({ name: "Backrest Slat (Lower)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor backrest plank" }, new THREE.Vector3(0, 26, 7.5));
+        addWoodPartInternal({ name: "Backrest Slat (Upper)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor backrest plank" }, new THREE.Vector3(0, 31, 7.5));
+        addWoodPartInternal({ name: "Leg Block (L)", w: 3.5, h: 17.25, d: 14, species: "PINE", desc: "Leg support block" }, new THREE.Vector3(-20, 8.625, 0));
+        addWoodPartInternal({ name: "Leg Block (R)", w: 3.5, h: 17.25, d: 14, species: "PINE", desc: "Leg support block" }, new THREE.Vector3(20, 8.625, 0));
+
+      } else if (type === "nightstand") {
+        addWoodPartInternal({ name: "Nightstand Top Deck", w: 20, h: 0.75, d: 18, species: "OAK", desc: "Top surface" }, new THREE.Vector3(0, 26, 0));
+        addWoodPartInternal({ name: "Bottom Shelf Deck", w: 18.5, h: 0.75, d: 16.5, species: "OAK", desc: "Lower open deck" }, new THREE.Vector3(0, 6, 0));
+        addWoodPartInternal({ name: "Corner Post Leg (FL)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(-8.5, 12.625, -7.5));
+        addWoodPartInternal({ name: "Corner Post Leg (FR)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(8.5, 12.625, -7.5));
+        addWoodPartInternal({ name: "Corner Post Leg (BL)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(-8.5, 12.625, 7.5));
+        addWoodPartInternal({ name: "Corner Post Leg (BR)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(8.5, 12.625, 7.5));
       }
-      renderPartsList();
+
+      isBatchAction = false;
+      saveState();
     }
 
-    function renderPartsList() {
-      const list = document.getElementById("partsList");
-      if (!addedParts.length) {
-        list.innerHTML = "<p>No parts yet.</p>";
+    function spawnSelectedPreset() {
+      const val = document.getElementById('preset-select').value;
+      if (PRESETS[val]) {
+        addWoodPartInternal(PRESETS[val]);
+        saveState();
+      } else {
+        spawnFurnitureAssembly(val);
+      }
+    }
+
+    // --- PARTS LIST & CUT LIST GENERATOR ---
+    function generatePartsList() {
+      if (woodParts.length === 0) {
+        alert("Workspace is empty! Add wood parts first to generate a parts list.");
         return;
       }
 
-      list.innerHTML = addedParts.map(function (mesh) {
-        const part = mesh.userData.part;
-        const size = formatSize(part.size);
-        const selectedClass = mesh === selectedMesh ? " selected" : "";
-        const lockedClass = mesh.userData.locked ? " locked" : "";
-        return (
-          '<div class="part-row' + selectedClass + lockedClass + '" data-id="' + part.id + '">' +
-          "<strong>" + part.id + "</strong>" +
-          "<span>" + part.name + (mesh.userData.locked ? " (locked)" : "") + "<br>" + size + " in</span>" +
-          '<div class="row-actions">' +
-          '<button type="button" data-action="duplicate" title="Duplicate part">D</button>' +
-          '<button type="button" data-action="lock" title="Lock or unlock part">L</button>' +
-          '<button type="button" data-action="delete" title="Remove part">X</button>' +
-          "</div>" +
-          "</div>"
-        );
-      }).join("");
+      const summaryMap = {};
+      let grandTotalBF = 0;
 
-      list.querySelectorAll(".part-row").forEach(function (row) {
-        row.addEventListener("click", function () {
-          const id = row.dataset.id;
-          const mesh = addedParts.find(function (partMesh) {
-            return partMesh.userData.part.id === id;
-          });
-          setSelected(mesh || null);
-        });
+      woodParts.forEach(group => {
+        const ud = group.userData;
+        const d = ud.dimensions;
+        const bf = (d.w * d.h * d.d) / 144;
+        grandTotalBF += bf;
 
-        row.addEventListener("mouseenter", function () {
-          const id = row.dataset.id;
-          const mesh = addedParts.find(function (partMesh) {
-            return partMesh.userData.part.id === id;
-          });
-          if (!mesh) return;
-          row.title = mesh.userData.part.id + " - " + mesh.userData.part.name + "\\n" + formatSize(mesh.userData.part.size) + " in\\n" + (mesh.userData.part.notes || "");
-        });
+        // Group key based on name, dimensions, and material
+        const key = `${ud.name}|${d.w}|${d.h}|${d.d}|${ud.species}`;
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            name: ud.name,
+            w: d.w,
+            h: d.h,
+            d: d.d,
+            species: ud.species,
+            desc: ud.description,
+            qty: 0,
+            unitBF: bf
+          };
+        }
+        summaryMap[key].qty += 1;
       });
 
-      list.querySelectorAll(".row-actions button").forEach(function (button) {
-        button.addEventListener("click", function (event) {
-          event.stopPropagation();
-          const row = event.currentTarget.closest(".part-row");
-          const mesh = addedParts.find(function (partMesh) {
-            return partMesh.userData.part.id === row.dataset.id;
-          });
-          if (!mesh) return;
-          setSelected(mesh);
+      let html = `<table class="parts-table">
+        <thead>
+          <tr>
+            <th>Part Name</th>
+            <th>Qty</th>
+            <th>Dimensions (Thick × Width × Length)</th>
+            <th>Material</th>
+            <th>Board Feet</th>
+          </tr>
+        </thead>
+        <tbody>`;
 
-          const action = event.currentTarget.dataset.action;
-          if (action === "duplicate") duplicateSelected();
-          if (action === "lock") toggleSelectedLock();
-          if (action === "delete") deleteSelected();
-        });
-      });
+      for (let k in summaryMap) {
+        const item = summaryMap[k];
+        const totalItemBF = (item.unitBF * item.qty).toFixed(2);
+        html += `<tr>
+          <td><strong>${item.name}</strong><br><span style="font-size:10px; color:#a1a1a6;">${item.desc}</span></td>
+          <td><span class="badge" style="font-size:12px;">${item.qty}x</span></td>
+          <td>${item.h}" × ${item.w}" × ${item.d}"</td>
+          <td>${item.species}</td>
+          <td>${totalItemBF} BF</td>
+        </tr>`;
+      }
+
+      html += `</tbody></table>`;
+      html += `<div class="parts-summary">
+        <strong>📦 Summary & Stock Requirement:</strong><br>
+        Total Parts Count: <strong>${woodParts.length} Components</strong><br>
+        Total Board Footage: <strong style="color:#30d158;">${grandTotalBF.toFixed(2)} Board Feet (BF)</strong>
+      </div>`;
+
+      document.getElementById('parts-table-container').innerHTML = html;
+      document.getElementById('parts-modal').style.display = "flex";
     }
 
-    function dropPointFromEvent(event) {
-      const rect = viewer.renderer.domElement.getBoundingClientRect();
-      const pointer = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-      );
-      const raycaster = new THREE.Raycaster();
-      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-      const point = new THREE.Vector3();
-      raycaster.setFromCamera(pointer, viewer.camera);
-      raycaster.ray.intersectPlane(plane, point);
-      return point;
+    function printPartsList() {
+      const content = document.getElementById('parts-table-container').innerHTML;
+      const printWin = window.open('', '', 'width=800,height=600');
+      printWin.document.write(`<html><head><title>Scout Woodworking Cut List</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; color: #000; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 12px; }
+          th { background: #f2f2f2; }
+          .badge { font-weight: bold; }
+          .parts-summary { margin-top: 20px; padding: 12px; background: #f9f9f9; border: 1px solid #ddd; }
+        </style>
+      </head><body>
+        <h2>🪵 Scout Workshop Cut List & Bill of Materials</h2>
+        ${content}
+      </body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
     }
 
-    function loadShelfA() {
-      clearModel();
-      WoodShop3D.shelfAParts().forEach(function (part) {
-        addPart(Object.assign({}, part, { draggable: true }));
-      });
-    }
+    // --- HOVER / TOUCH INSPECTOR ---
+    function onPointerMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    function loadTabletopShelf() {
-      clearModel();
-      WoodShop3D.tabletopShelfParts().forEach(function (part) {
-        addPart(Object.assign({}, part, { draggable: true }));
-      });
-    }
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
 
-    function loadBookcase() {
-      clearModel();
-      WoodShop3D.bookcaseParts().forEach(function (part) {
-        addPart(Object.assign({}, part, { draggable: true }));
-      });
-    }
+      if (intersects.length > 0) {
+        let hitObj = intersects[0].object;
+        let rootGroup = hitObj;
+        while (rootGroup && rootGroup.parent && rootGroup.parent !== scene) {
+          rootGroup = rootGroup.parent;
+        }
 
-    function loadWorkbench() {
-      clearModel();
-      WoodShop3D.workbenchParts().forEach(function (part) {
-        addPart(Object.assign({}, part, { draggable: true }));
-      });
-    }
+        if (rootGroup && woodParts.includes(rootGroup)) {
+          tooltip.style.display = "block";
+          tooltip.style.left = Math.min(event.clientX + 16, window.innerWidth - 220) + "px";
+          tooltip.style.top = Math.min(event.clientY + 16, window.innerHeight - 150) + "px";
 
-    function loadShoeRack() {
-      clearModel();
-      WoodShop3D.shoeRackParts().forEach(function (part) {
-        addPart(Object.assign({}, part, { draggable: true }));
-      });
-    }
+          const ud = rootGroup.userData;
+          const dims = ud.dimensions;
+          const boardFeet = ((dims.w * dims.h * dims.d) / 144).toFixed(2);
 
-    function loadCubbies() {
-      clearModel();
-      WoodShop3D.storageCubbiesParts().forEach(function (part) {
-        addPart(Object.assign({}, part, { draggable: true }));
-      });
-    }
-
-    function loadTable() {
-      clearModel();
-      [
-        { id: "TOP", name: "Tabletop", size: [48, 1.5, 24], position: [0, 30.75, 0], materialKey: "plywood", notes: "Main table surface." },
-        { id: "L1", name: "Front left leg", size: [3.5, 29.25, 3.5], position: [-20, 14.625, 10], materialKey: "skid", notes: "2x4 table leg." },
-        { id: "L2", name: "Front right leg", size: [3.5, 29.25, 3.5], position: [20, 14.625, 10], materialKey: "skid", notes: "2x4 table leg." },
-        { id: "L3", name: "Back left leg", size: [3.5, 29.25, 3.5], position: [-20, 14.625, -10], materialKey: "skid", notes: "2x4 table leg." },
-        { id: "L4", name: "Back right leg", size: [3.5, 29.25, 3.5], position: [20, 14.625, -10], materialKey: "skid", notes: "2x4 table leg." },
-        { id: "A1", name: "Front apron", size: [42, 3.5, 0.75], position: [0, 27, 11.625], materialKey: "pine", notes: "Apron braces the legs and supports the tabletop." },
-        { id: "A2", name: "Back apron", size: [42, 3.5, 0.75], position: [0, 27, -11.625], materialKey: "pine", notes: "Apron braces the legs and supports the tabletop." },
-        { id: "A3", name: "Left side apron", size: [0.75, 3.5, 18], position: [-23.625, 27, 0], materialKey: "pine", notes: "Side apron braces front and back legs." },
-        { id: "A4", name: "Right side apron", size: [0.75, 3.5, 18], position: [23.625, 27, 0], materialKey: "pine", notes: "Side apron braces front and back legs." },
-        { id: "S1", name: "Front top stiffener", size: [48, 1.5, 0.75], position: [0, 29.625, 11.625], materialKey: "pine", notes: "Stiffener lip reduces tabletop flex." },
-        { id: "S2", name: "Back top stiffener", size: [48, 1.5, 0.75], position: [0, 29.625, -11.625], materialKey: "pine", notes: "Stiffener lip reduces tabletop flex." }
-      ].forEach(addPart);
-    }
-
-    function loadChair() {
-      clearModel();
-      [
-        { id: "SEAT", name: "Seat", size: [18, 1.5, 18], position: [0, 18.75, 0], materialKey: "plywood", notes: "Chair seat panel." },
-        { id: "FL", name: "Front left leg", size: [1.5, 18, 1.5], position: [-7.5, 9, 7.5], materialKey: "pine", notes: "Front chair leg." },
-        { id: "FR", name: "Front right leg", size: [1.5, 18, 1.5], position: [7.5, 9, 7.5], materialKey: "pine", notes: "Front chair leg." },
-        { id: "BL", name: "Back left post", size: [1.5, 36, 1.5], position: [-7.5, 18, -7.5], materialKey: "pine", notes: "Tall rear post supports the back rest." },
-        { id: "BR", name: "Back right post", size: [1.5, 36, 1.5], position: [7.5, 18, -7.5], materialKey: "pine", notes: "Tall rear post supports the back rest." },
-        { id: "BACK", name: "Back rest", size: [18, 6, 0.75], position: [0, 31, -8.25], materialKey: "plywood", notes: "Back rest panel." },
-        { id: "ST1", name: "Front lower stretcher", size: [15, 1.5, 0.75], position: [0, 8, 7.5], materialKey: "pine", notes: "Stretcher braces the legs." },
-        { id: "ST2", name: "Back lower stretcher", size: [15, 1.5, 0.75], position: [0, 8, -7.5], materialKey: "pine", notes: "Stretcher braces the rear posts." },
-        { id: "ST3", name: "Left side stretcher", size: [0.75, 1.5, 15], position: [-7.5, 8, 0], materialKey: "pine", notes: "Side stretcher braces front and back legs." },
-        { id: "ST4", name: "Right side stretcher", size: [0.75, 1.5, 15], position: [7.5, 8, 0], materialKey: "pine", notes: "Side stretcher braces front and back legs." }
-      ].forEach(addPart);
-    }
-
-    function selectPartFromCanvas(event) {
-      if (!pointerStart) return;
-      const moved = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
-      pointerStart = null;
-      if (moved > 4) return;
-
-      const rect = viewer.renderer.domElement.getBoundingClientRect();
-      const pointer = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-      );
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(pointer, viewer.camera);
-      const hits = raycaster.intersectObjects(addedParts, false);
-      setSelected(hits.length ? hits[0].object : null);
-    }
-
-    function applySelectedSize() {
-      if (!selectedMesh || selectedMesh.userData.locked) return;
-      const size = [
-        Number(document.getElementById("selectedWidth").value) || 1,
-        Number(document.getElementById("selectedHeight").value) || 1,
-        Number(document.getElementById("selectedDepth").value) || 1
-      ];
-      const spec = partToSpec(selectedMesh);
-      spec.size = size;
-      replaceSelectedWith(spec);
-    }
-
-    function applySelectedPosition() {
-      if (!selectedMesh || selectedMesh.userData.locked) return;
-      selectedMesh.position.x = Number(document.getElementById("selectedX").value) || 0;
-      selectedMesh.position.y = Number(document.getElementById("selectedY").value) || 0;
-      selectedMesh.position.z = Number(document.getElementById("selectedZ").value) || 0;
-      snapMesh(selectedMesh);
-      syncSelectedPanel();
-      if (selectionBox) selectionBox.update();
-    }
-
-    function rotateSelected(axis) {
-      if (!selectedMesh || selectedMesh.userData.locked) return;
-      selectedMesh.rotation[axis] += Math.PI / 2;
-      if (selectionBox) selectionBox.update();
-    }
-
-    function snapSelected() {
-      if (!selectedMesh || selectedMesh.userData.locked) return;
-      snapMesh(selectedMesh);
-      syncSelectedPanel();
-      if (selectionBox) selectionBox.update();
-    }
-
-    function legLikeParts() {
-      return addedParts.filter(function (mesh) {
-        const size = mesh.userData.part.size;
-        const name = (mesh.userData.part.name || "").toLowerCase();
-        const isTall = size[1] >= Math.max(size[0], size[2]) * 3;
-        return mesh !== selectedMesh && isTall && (name.includes("leg") || name.includes("post"));
-      });
-    }
-
-    function selectedRunsAlongX() {
-      const size = selectedMesh.userData.part.size;
-      const yRot = Math.abs((selectedMesh.rotation.y % Math.PI + Math.PI) % Math.PI);
-      const baseRunsX = size[0] >= size[2];
-      const rotatedQuarterTurn = Math.abs(yRot - Math.PI / 2) < 0.01;
-      return rotatedQuarterTurn ? !baseRunsX : baseRunsX;
-    }
-
-    function lowerBraceHeight() {
-      if (!selectedMesh || selectedMesh.userData.locked) return;
-      const legs = legLikeParts();
-      const selectedHeight = selectedMesh.userData.part.size[1];
-      const tallestLeg = legs.reduce(function (max, leg) {
-        return Math.max(max, leg.userData.part.size[1]);
-      }, 0);
-      const targetCenterY = tallestLeg ? Math.max(6, tallestLeg * 0.25) : Math.max(6, selectedHeight / 2);
-      selectedMesh.position.y = targetCenterY;
-      snapMesh(selectedMesh);
-      syncSelectedPanel();
-      if (selectionBox) selectionBox.update();
-    }
-
-    function fitBetweenLegs() {
-      if (!selectedMesh || selectedMesh.userData.locked) return;
-      const legs = legLikeParts();
-      if (legs.length < 2) return;
-
-      const runX = selectedRunsAlongX();
-      const selectedPos = selectedMesh.position;
-      const candidates = [];
-
-      for (let i = 0; i < legs.length; i += 1) {
-        for (let j = i + 1; j < legs.length; j += 1) {
-          const a = legs[i];
-          const b = legs[j];
-          const sameLineDistance = runX
-            ? Math.abs(a.position.z - b.position.z) + Math.abs(((a.position.z + b.position.z) / 2) - selectedPos.z)
-            : Math.abs(a.position.x - b.position.x) + Math.abs(((a.position.x + b.position.x) / 2) - selectedPos.x);
-          const span = runX ? Math.abs(a.position.x - b.position.x) : Math.abs(a.position.z - b.position.z);
-          if (span <= 1) continue;
-          candidates.push({ a: a, b: b, score: sameLineDistance, span: span });
+          document.getElementById('tt-name').innerText = ud.name;
+          document.getElementById('tt-type').innerText = ud.type;
+          document.getElementById('tt-dims').innerText = `Dimensions: ${dims.w}" W × ${dims.h}" H × ${dims.d}" D`;
+          document.getElementById('tt-species').innerText = `Species: ${ud.species}`;
+          document.getElementById('tt-bf').innerText = `Board Feet: ${boardFeet} BF`;
+          document.getElementById('tt-desc').innerText = ud.description || "";
+          return;
         }
       }
-
-      candidates.sort(function (left, right) {
-        return left.score - right.score;
-      });
-
-      const pair = candidates[0];
-      if (!pair) return;
-
-      const spec = partToSpec(selectedMesh);
-      const aSize = pair.a.userData.part.size;
-      const bSize = pair.b.userData.part.size;
-      const aLegThickness = runX ? aSize[0] : aSize[2];
-      const bLegThickness = runX ? bSize[0] : bSize[2];
-      const insideSpan = Math.max(1, pair.span - aLegThickness / 2 - bLegThickness / 2);
-
-      if (runX) {
-        spec.size[0] = insideSpan;
-        spec.position[0] = (pair.a.position.x + pair.b.position.x) / 2;
-        spec.position[2] = (pair.a.position.z + pair.b.position.z) / 2;
-      } else {
-        spec.size[2] = insideSpan;
-        spec.position[0] = (pair.a.position.x + pair.b.position.x) / 2;
-        spec.position[2] = (pair.a.position.z + pair.b.position.z) / 2;
-      }
-
-      spec.position[1] = selectedMesh.position.y;
-      replaceSelectedWith(spec);
-      snapSelected();
+      tooltip.style.display = "none";
     }
 
-    function toggleSelectedLock() {
-      if (!selectedMesh) return;
-      selectedMesh.userData.locked = !selectedMesh.userData.locked;
-      syncSelectedPanel();
-      renderPartsList();
+    // --- SELECTION & INTERACTION ---
+    function onPointerDown(event) {
+      if (transformControls.dragging) return;
+
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        let hitObj = intersects[0].object;
+        let rootGroup = hitObj;
+        while (rootGroup && rootGroup.parent && rootGroup.parent !== scene) {
+          rootGroup = rootGroup.parent;
+        }
+
+        if (isPathMode) {
+          pathPoints.push(intersects[0].point.clone());
+          const dot = new THREE.Mesh(new THREE.SphereGeometry(0.8), new THREE.MeshBasicMaterial({ color: 0x30d158 }));
+          dot.position.copy(intersects[0].point);
+          scene.add(dot);
+          pathMarkerDots.push(dot);
+          return;
+        }
+
+        if (isSnapMode && selectedPart) {
+          if (rootGroup && rootGroup !== selectedPart) {
+            snapPartToFace(selectedPart, intersects[0].object, intersects[0].face, intersects[0].point);
+            toggleSnapMode();
+            saveState();
+            return;
+          }
+        }
+
+        if (rootGroup && woodParts.includes(rootGroup)) {
+          selectPart(rootGroup);
+        }
+      }
+    }
+
+    function selectPart(group) {
+      removeHighlight();
+
+      selectedPart = group;
+      transformControls.attach(selectedPart);
+
+      // Cyan Bounding Box Outline
+      selectionBoxHelper = new THREE.BoxHelper(selectedPart, 0x64d2ff);
+      selectionBoxHelper.material.linewidth = 2;
+      scene.add(selectionBoxHelper);
+
+      const dims = selectedPart.userData.dimensions;
+      document.getElementById('dim-w').value = dims.w;
+      document.getElementById('dim-h').value = dims.h;
+      document.getElementById('dim-d').value = dims.d;
+    }
+
+    // --- SURFACE LOCK & PATH DUPLICATION ---
+    function toggleSnapMode() {
+      isSnapMode = !isSnapMode;
+      const btn = document.getElementById('snap-btn');
+      btn.className = isSnapMode ? "active" : "secondary";
+      btn.innerText = isSnapMode ? "Click Target Surface..." : "Lock / Flush Attach Face";
+    }
+
+    function snapPartToFace(sourceGroup, targetMesh, hitFace, hitPoint) {
+      if (!hitFace) return;
+      const normalMatrix = new THREE.Matrix3().getNormalMatrix(targetMesh.matrixWorld);
+      const worldNormal = hitFace.normal.clone().applyMatrix3(normalMatrix).normalize();
+
+      const bbox = new THREE.Box3().setFromObject(sourceGroup);
+      const size = new THREE.Vector3();
+      bbox.getSize(size);
+
+      const offset = worldNormal.clone().multiplyScalar(size.y / 2);
+      sourceGroup.position.copy(hitPoint).add(offset);
+      sourceGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), worldNormal);
+    }
+
+    function togglePathMode() {
+      isPathMode = !isPathMode;
+      pathPoints = [];
+      pathMarkerDots.forEach(d => scene.remove(d));
+      pathMarkerDots = [];
+
+      const btn = document.getElementById('path-mode-btn');
+      const instructions = document.getElementById('path-instructions');
+      const finishBtn = document.getElementById('finish-path-btn');
+
+      if (isPathMode) {
+        btn.className = "active";
+        btn.innerText = "Cancel Path Mode";
+        instructions.style.display = "block";
+        finishBtn.style.display = "block";
+      } else {
+        btn.className = "secondary";
+        btn.innerText = "Duplicate Along Path Points";
+        instructions.style.display = "none";
+        finishBtn.style.display = "none";
+      }
+    }
+
+    function executePathDuplication() {
+      if (!selectedPart || pathPoints.length < 2) {
+        alert("Please click 2 or more points in scene to define the duplication path.");
+        return;
+      }
+
+      isBatchAction = true;
+      for (let i = 0; i < pathPoints.length - 1; i++) {
+        const pStart = pathPoints[i];
+        const pEnd = pathPoints[i + 1];
+
+        const distance = pStart.distanceTo(pEnd);
+        const dir = new THREE.Vector3().subVectors(pEnd, pStart).normalize();
+
+        const copySpacing = Math.max(12, selectedPart.userData.dimensions.d + 2);
+        const copies = Math.max(1, Math.floor(distance / copySpacing));
+        const step = distance / (copies + 1);
+
+        for (let j = 1; j <= copies; j++) {
+          const spawnPos = pStart.clone().add(dir.clone().multiplyScalar(step * j));
+          
+          const clonedPreset = {
+            name: selectedPart.userData.name + " (Copy)",
+            w: selectedPart.userData.dimensions.w,
+            h: selectedPart.userData.dimensions.h,
+            d: selectedPart.userData.dimensions.d,
+            species: "PLYWOOD",
+            desc: selectedPart.userData.description
+          };
+          
+          const newGroup = addWoodPartInternal(clonedPreset, spawnPos);
+          newGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+        }
+      }
+      isBatchAction = false;
+      saveState();
+
+      togglePathMode();
+    }
+
+    // --- EDITING & WORKSPACE ---
+    function applyResize() {
+      if (!selectedPart) return;
+
+      const w = parseFloat(document.getElementById('dim-w').value);
+      const h = parseFloat(document.getElementById('dim-h').value);
+      const d = parseFloat(document.getElementById('dim-d').value);
+
+      selectedPart.userData.dimensions = { w, h, d };
+
+      const mainMesh = selectedPart.children[0];
+      mainMesh.geometry.dispose();
+      mainMesh.geometry = new THREE.BoxGeometry(w, h, d);
+
+      if (selectionBoxHelper) {
+        selectionBoxHelper.update();
+      }
+      saveState();
     }
 
     function deleteSelected() {
-      if (!selectedMesh) return;
-      const index = addedParts.indexOf(selectedMesh);
-      const mesh = selectedMesh;
-      setSelected(null);
-      if (index >= 0) addedParts.splice(index, 1);
-      viewer.removeBoard(mesh);
-      renderPartsList();
+      if (!selectedPart) return;
+
+      transformControls.detach();
+      removeHighlight();
+
+      scene.remove(selectedPart);
+      woodParts = woodParts.filter(p => p !== selectedPart);
+      selectedPart = null;
+      tooltip.style.display = "none";
+      saveState();
     }
 
-    function duplicateSelected() {
-      if (!selectedMesh) return;
-      const spec = partToSpec(selectedMesh);
-      spec.id = nextId("D");
-      spec.name = spec.name + " copy";
-      spec.locked = false;
-      spec.position = [spec.position[0] + 4, spec.position[1], spec.position[2] + 4];
-      const mesh = addPart(spec);
-      setSelected(mesh);
+    function clearEntireScene() {
+      transformControls.detach();
+      removeHighlight();
+
+      woodParts.forEach(group => {
+        scene.remove(group);
+        group.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+          }
+        });
+      });
+      woodParts = [];
+      selectedPart = null;
+      tooltip.style.display = "none";
+      document.getElementById('clear-modal').style.display = "none";
+      saveState();
     }
 
-    function handlePartHover(event) {
-      const rect = viewer.renderer.domElement.getBoundingClientRect();
-      hoverPointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      hoverPointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      hoverRaycaster.setFromCamera(hoverPointer, viewer.camera);
-
-      const hits = hoverRaycaster.intersectObjects(addedParts, false);
-      if (!hits.length) {
-        partTooltip.style.display = "none";
-        viewer.renderer.domElement.style.cursor = "";
+    // --- EXPORT FUNCTION ---
+    function exportStandaloneHTML() {
+      if (woodParts.length === 0) {
+        alert("Workspace is empty! Add wood parts before exporting.");
         return;
       }
 
-      const mesh = hits[0].object;
-      partTooltip.innerHTML = tooltipHtml(mesh);
-      partTooltip.style.display = "block";
-      partTooltip.style.left = Math.min(event.clientX + 14, window.innerWidth - 300) + "px";
-      partTooltip.style.top = Math.min(event.clientY + 14, window.innerHeight - 160) + "px";
-      viewer.renderer.domElement.style.cursor = mesh.userData.locked ? "not-allowed" : "pointer";
-    }
+      const modelData = woodParts.map(group => {
+        const mainMesh = group.children[0];
+        return {
+          name: group.userData.name || "Wood Part",
+          dimensions: group.userData.dimensions || { w: 1, h: 1, d: 1 },
+          species: group.userData.species || "Wood",
+          type: group.userData.type || "Stock",
+          description: group.userData.description || "",
+          color: mainMesh.material.color.getHex(),
+          pos: { x: group.position.x, y: group.position.y, z: group.position.z },
+          quat: { x: group.quaternion.x, y: group.quaternion.y, z: group.quaternion.z, w: group.quaternion.w }
+        };
+      });
 
-    function hidePartTooltip() {
-      partTooltip.style.display = "none";
-      viewer.renderer.domElement.style.cursor = "";
-    }
-
-    async function exportCurrentModelHtml() {
-      const exportedParts = addedParts.map(partToSpec);
-      let helperScript = '<script src="woodshop3d.js"></' + 'script>';
-
-      try {
-        const response = await fetch("woodshop3d.js");
-        if (response.ok) {
-          const helperSource = await response.text();
-          helperScript = "<script>\n" + helperSource.replace(/<\/script/gi, "<\\/script") + "\n</" + "script>";
-        }
-      } catch (error) {
-        console.warn("Export will reference woodshop3d.js instead of embedding it.", error);
-      }
-
-      const html = `<!DOCTYPE html>
+      const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exported Wood 3D Model</title>
+  <title>Scout 3D Wood Model Export</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #171923; color: #edf2f7; font-family: Arial, sans-serif; }
-    #viewer { width: 100vw; height: 100vh; }
-    #panel { position: absolute; top: 16px; left: 16px; padding: 12px 14px; border: 1px solid #4a5568; border-radius: 8px; background: rgba(26, 32, 44, 0.9); line-height: 1.4; }
+    body { margin: 0; overflow: hidden; background: #18181a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #f2f2f7; user-select: none; }
+    #info-card {
+      position: absolute; top: 16px; left: 16px; background: rgba(28,28,30,0.92);
+      border: 1px solid #3a3a3c; padding: 14px 18px; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 10;
+    }
+    #info-card h3 { margin: 0 0 4px 0; color: #e5a93c; font-size: 15px; }
+    #info-card p { margin: 0; font-size: 11px; color: #8e8e93; }
+    #tooltip {
+      position: absolute; display: none; pointer-events: none;
+      background: rgba(18,18,18,0.95); border: 1px solid #e5a93c; padding: 10px 14px;
+      border-radius: 8px; font-size: 12px; line-height: 1.4; z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    }
   </style>
-</head>
-<body>
-  <div id="panel"><strong>Exported Wood Model</strong><br>${exportedParts.length} parts<br>Drag to rotate. Scroll to zoom.</div>
-  <div id="viewer"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>
-  ${helperScript}
+</head>
+<body>
+  <div id="info-card">
+    <h3>🪵 Interactive Scout Wood Model</h3>
+    <p>Single Finger / Left Click: Rotate | Pinch / Scroll: Zoom</p>
+  </div>
+
+  <div id="tooltip">
+    <div id="tt-name" style="color:#e5a93c; font-weight:bold; font-size:13px;"></div>
+    <div id="tt-dims"></div>
+    <div id="tt-species" style="color:#8e8e93;"></div>
+    <div id="tt-bf" style="color:#30d158; font-weight:bold;"></div>
+  </div>
+
   <script>
-    const parts = ${JSON.stringify(exportedParts, null, 2)};
-    const viewer = WoodShop3D.createViewer({ container: "#viewer", target: [0, 18, 0], cameraPosition: [115, 80, 135] });
-    viewer.addBoards(parts);
-    viewer.animate();
+    const sceneData = ${JSON.stringify(modelData, null, 2)};
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x18181a);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(100, 70, 120);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 12, 0);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    dirLight.position.set(90, 130, 90);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    scene.add(new THREE.GridHelper(200, 50, 0x3a3a3c, 0x2c2c2e));
+
+    const exportGroups = [];
+    sceneData.forEach(item => {
+      const group = new THREE.Group();
+      const geo = new THREE.BoxGeometry(item.dimensions.w, item.dimensions.h, item.dimensions.d);
+      const mat = new THREE.MeshStandardMaterial({ color: item.color, roughness: 0.7 });
+      const mainMesh = new THREE.Mesh(geo, mat);
+      mainMesh.castShadow = true;
+      mainMesh.receiveShadow = true;
+
+      const edges = new THREE.EdgesGeometry(geo);
+      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x5c3d2e, linewidth: 1 }));
+      mainMesh.add(line);
+
+      group.add(mainMesh);
+
+      group.position.set(item.pos.x, item.pos.y, item.pos.z);
+      group.quaternion.set(item.quat.x, item.quat.y, item.quat.z, item.quat.w);
+      group.userData = item;
+
+      scene.add(group);
+      exportGroups.push(group);
+    });
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const tooltip = document.getElementById('tooltip');
+
+    window.addEventListener('pointermove', (e) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(exportGroups, true);
+
+      if (intersects.length > 0) {
+        let rootGroup = intersects[0].object;
+        while (rootGroup && rootGroup.parent && rootGroup.parent !== scene) {
+          rootGroup = rootGroup.parent;
+        }
+
+        if (rootGroup && rootGroup.userData.dimensions) {
+          const ud = rootGroup.userData;
+          const d = ud.dimensions;
+          const bf = ((d.w * d.h * d.d) / 144).toFixed(2);
+
+          tooltip.style.display = "block";
+          tooltip.style.left = Math.min(e.clientX + 16, window.innerWidth - 220) + "px";
+          tooltip.style.top = Math.min(e.clientY + 16, window.innerHeight - 150) + "px";
+
+          document.getElementById('tt-name').innerText = ud.name;
+          document.getElementById('tt-dims').innerText = \`Dimensions: \${d.w}" W × \${d.h}" H × \${d.d}" D\`;
+          document.getElementById('tt-species').innerText = \`Species: \${ud.species}\`;
+          document.getElementById('tt-bf').innerText = \`Board Feet: \${bf} BF\`;
+          return;
+        }
+      }
+      tooltip.style.display = "none";
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
   <\/script>
 </body>
-</html>
-`;
-      const blob = new Blob([html], { type: "text/html" });
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "wood_model_export.html";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `scout_wood_model_${Date.now()}.html`;
+      a.click();
       URL.revokeObjectURL(url);
     }
 
-    document.querySelectorAll(".tile").forEach(function (tile) {
-      tile.addEventListener("dragstart", function (event) {
-        draggedKind = event.currentTarget.dataset.kind;
-        event.dataTransfer.setData("text/plain", draggedKind);
-      });
-    });
-
-    viewer.renderer.domElement.addEventListener("dragover", function (event) {
-      event.preventDefault();
-    });
-
-    viewer.renderer.domElement.addEventListener("pointerdown", function (event) {
-      pointerStart = { x: event.clientX, y: event.clientY };
-      hidePartTooltip();
-    });
-
-    viewer.renderer.domElement.addEventListener("pointerup", selectPartFromCanvas);
-    viewer.renderer.domElement.addEventListener("pointermove", handlePartHover);
-    viewer.renderer.domElement.addEventListener("pointerleave", hidePartTooltip);
-
-    viewer.renderer.domElement.addEventListener("woodshop3d-part-moved", function (event) {
-      const mesh = event.detail.mesh;
-      if (mesh.userData.locked) return;
-      snapMesh(mesh);
-      if (document.getElementById("autoLockToggle").checked) {
-        mesh.userData.locked = true;
-        renderPartsList();
-      }
-      if (mesh === selectedMesh) {
-        syncSelectedPanel();
-        if (selectionBox) selectionBox.update();
-      }
-    });
-
-    viewer.renderer.domElement.addEventListener("drop", function (event) {
-      event.preventDefault();
-      const kind = event.dataTransfer.getData("text/plain") || draggedKind;
-      if (!kind || !partTemplates[kind]) return;
-      const point = dropPointFromEvent(event);
-      addTemplate(kind, point.x, point.z);
-      draggedKind = null;
-    });
-
-    document.getElementById("addCustomButton").addEventListener("click", function () {
-      const size = [
-        Number(document.getElementById("widthInput").value) || 1,
-        Number(document.getElementById("heightInput").value) || 1,
-        Number(document.getElementById("depthInput").value) || 1
-      ];
-      const mesh = addPart({
-        id: nextId("C"),
-        name: "Custom board",
-        size: size,
-        position: [0, centerYFor(size), 0],
-        materialKey: document.getElementById("materialInput").value
-      });
-      setSelected(mesh);
-    });
-
-    document.getElementById("loadShelfButton").addEventListener("click", loadShelfA);
-    document.getElementById("loadTabletopShelfButton").addEventListener("click", loadTabletopShelf);
-    document.getElementById("loadBookcaseButton").addEventListener("click", loadBookcase);
-    document.getElementById("loadWorkbenchButton").addEventListener("click", loadWorkbench);
-    document.getElementById("loadShoeRackButton").addEventListener("click", loadShoeRack);
-    document.getElementById("loadCubbiesButton").addEventListener("click", loadCubbies);
-    document.getElementById("loadTableButton").addEventListener("click", loadTable);
-    document.getElementById("loadChairButton").addEventListener("click", loadChair);
-    document.getElementById("clearButton").addEventListener("click", clearModel);
-    document.getElementById("applySizeButton").addEventListener("click", applySelectedSize);
-    document.getElementById("applyPositionButton").addEventListener("click", applySelectedPosition);
-    document.getElementById("rotateYButton").addEventListener("click", function () { rotateSelected("y"); });
-    document.getElementById("rotateXButton").addEventListener("click", function () { rotateSelected("x"); });
-    document.getElementById("snapSelectedButton").addEventListener("click", snapSelected);
-    document.getElementById("lowerBraceButton").addEventListener("click", lowerBraceHeight);
-    document.getElementById("fitBetweenLegsButton").addEventListener("click", fitBetweenLegs);
-    document.getElementById("lockPartButton").addEventListener("click", toggleSelectedLock);
-    document.getElementById("duplicateButton").addEventListener("click", duplicateSelected);
-    document.getElementById("deletePartButton").addEventListener("click", deleteSelected);
-    document.getElementById("exportHtmlButton").addEventListener("click", exportCurrentModelHtml);
-
-    viewer.enableSimpleDragging();
-    renderPartsList();
-    syncSelectedPanel();
-    function updateSelectionBox() {
-      if (selectionBox) selectionBox.update();
-      requestAnimationFrame(updateSelectionBox);
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     }
-    updateSelectionBox();
-    viewer.animate();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      orbitControls.update();
+
+      if (selectionBoxHelper) {
+        selectionBoxHelper.update();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
   </script>
 </body>
 </html>
