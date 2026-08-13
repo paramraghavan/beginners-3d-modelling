@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelf A 3D Model Using WoodShop3D</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #1a202c;
+      color: #edf2f7;
+      font-family: Arial, sans-serif;
+    }
+
+    #viewer {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #panel {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      max-width: 340px;
+      padding: 12px 14px;
+      border: 1px solid #4a5568;
+      border-radius: 6px;
+      background: rgba(26, 32, 44, 0.86);
+      line-height: 1.4;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    #panel strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <strong>Shelf A 3D Model</strong>
+    Built from reusable WoodShop3D part definitions.<br>
+    Left drag to rotate. Scroll to zoom. Right drag to pan.
+  </div>
+  <div id="viewer"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="woodshop3d.js"></script>
+
+  <script>
+    const viewer = WoodShop3D.createViewer({
+      container: "#viewer",
+      target: [0, 13, 0]
+    });
+
+    viewer.addBoards(WoodShop3D.shelfAParts());
+    viewer.animate();
+  </script>
+</body>
+</html>
+

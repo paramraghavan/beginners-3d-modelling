@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drag and Drop Wood 3D Modeler</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #171923;
+      color: #edf2f7;
+      font-family: Arial, sans-serif;
+    }
+
+    #viewer {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .panel {
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: 14px;
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid #4a5568;
+      border-radius: 8px;
+      background: rgba(26, 32, 44, 0.92);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+      overflow: auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #cbd5e0;
+    }
+
+    p {
+      margin: 0;
+      color: #a0aec0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .section {
+      padding-top: 10px;
+      border-top: 1px solid #4a5568;
+    }
+
+    .palette {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tile,
+    button {
+      min-height: 38px;
+      border: 1px solid #4a5568;
+      border-radius: 6px;
+      background: #2d3748;
+      color: #edf2f7;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      font-size: 13px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .tile:hover,
+    button:hover {
+      border-color: #90cdf4;
+      background: #35445a;
+    }
+
+    .presets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .option-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px;
+      border: 1px solid #4a5568;
+      border-radius: 6px;
+      background: #111827;
+      color: #edf2f7;
+      font-size: 13px;
+    }
+
+    .check-row input {
+      width: auto;
+      margin: 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    label {
+      display: block;
+      color: #cbd5e0;
+      font-size: 12px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px;
+      border: 1px solid #4a5568;
+      border-radius: 6px;
+      background: #111827;
+      color: #edf2f7;
+      font: inherit;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
+    }
+
+    .parts-list {
+      display: grid;
+      gap: 6px;
+      max-height: 210px;
+      overflow: auto;
+    }
+
+    .part-row {
+      display: grid;
+      grid-template-columns: 54px 1fr 86px;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid #3b4658;
+      border-radius: 6px;
+      background: rgba(17, 24, 39, 0.72);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .part-row:hover,
+    .part-row.selected {
+      border-color: #90cdf4;
+      background: rgba(45, 55, 72, 0.9);
+    }
+
+    .part-row strong {
+      color: #fbd38d;
+    }
+
+    .row-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+
+    .row-actions button {
+      min-height: 28px;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    .part-row.locked strong::after {
+      content: " locked";
+      color: #a0aec0;
+      font-weight: normal;
+    }
+
+    .selected-name {
+      min-height: 18px;
+      margin-bottom: 8px;
+      color: #fbd38d;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .support-warning {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid #f6ad55;
+      border-radius: 6px;
+      background: rgba(116, 66, 16, 0.35);
+      color: #feebc8;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .support-warning strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #fbd38d;
+    }
+
+    .danger {
+      border-color: #fc8181;
+      color: #fed7d7;
+    }
+
+    .primary {
+      border-color: #90cdf4;
+      color: #ebf8ff;
+    }
+
+    .hint {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      max-width: 360px;
+      padding: 12px 14px;
+      border: 1px solid #4a5568;
+      border-radius: 8px;
+      background: rgba(26, 32, 44, 0.88);
+      color: #cbd5e0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .part-tooltip {
+      position: absolute;
+      z-index: 20;
+      display: none;
+      max-width: 280px;
+      padding: 10px 12px;
+      border: 1px solid #90cdf4;
+      border-radius: 6px;
+      background: rgba(17, 24, 39, 0.94);
+      color: #edf2f7;
+      font-size: 12px;
+      line-height: 1.35;
+      pointer-events: none;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .part-tooltip strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #fbd38d;
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      .panel {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-height: 48vh;
+      }
+
+      .hint {
+        right: 10px;
+        left: 10px;
+        bottom: 10px;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="panel">
+    <div>
+      <h1>Wood 3D Modeler</h1>
+      <p>Drag a part onto the floor grid, then drag the 3D part to move it. Use presets to start with a shelf, tabletop shelf, table, or chair.</p>
+    </div>
+
+    <div class="section">
+      <h2>Drag Parts</h2>
+      <div class="palette">
+        <div class="tile" draggable="true" data-kind="plywood-panel">Plywood Panel</div>
+        <div class="tile" draggable="true" data-kind="shelf">Shelf Board</div>
+        <div class="tile" draggable="true" data-kind="leg">Table/Chair Leg</div>
+        <div class="tile" draggable="true" data-kind="cleat">Cleat/Apron</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Add Custom Board</h2>
+      <div class="form-grid">
+        <label>Width
+          <input id="widthInput" type="number" min="0.25" step="0.25" value="24">
+        </label>
+        <label>Height
+          <input id="heightInput" type="number" min="0.25" step="0.25" value="0.75">
+        </label>
+        <label>Depth
+          <input id="depthInput" type="number" min="0.25" step="0.25" value="12">
+        </label>
+        <label class="wide">Material
+          <select id="materialInput">
+            <option value="plywood">Plywood</option>
+            <option value="pine">Pine</option>
+            <option value="skid">2x Lumber</option>
+            <option value="painted">Painted</option>
+          </select>
+        </label>
+        <button id="addCustomButton" class="wide">Add Board at Center</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Presets</h2>
+      <div class="presets">
+        <button id="loadShelfButton">Shelf A</button>
+        <button id="loadTabletopShelfButton">Tabletop Shelf</button>
+        <button id="loadBookcaseButton">Bookcase</button>
+        <button id="loadWorkbenchButton">Workbench</button>
+        <button id="loadShoeRackButton">Shoe Rack</button>
+        <button id="loadCubbiesButton">Storage Cubbies</button>
+        <button id="loadTableButton">Simple Table</button>
+        <button id="loadChairButton">Simple Chair</button>
+        <button id="clearButton">Clear</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Alignment</h2>
+      <div class="option-row">
+        <label class="check-row">
+          <input id="snapToggle" type="checkbox" checked>
+          Snap to grid
+        </label>
+        <label class="check-row">
+          <input id="autoLockToggle" type="checkbox">
+          Auto lock after move
+        </label>
+        <label>Grid step
+          <input id="snapStepInput" type="number" min="0.25" step="0.25" value="0.75">
+        </label>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Selected Part</h2>
+      <div id="selectedName" class="selected-name">No part selected</div>
+      <div class="form-grid">
+        <label>Width
+          <input id="selectedWidth" type="number" min="0.25" step="0.25">
+        </label>
+        <label>Height
+          <input id="selectedHeight" type="number" min="0.25" step="0.25">
+        </label>
+        <label>Depth
+          <input id="selectedDepth" type="number" min="0.25" step="0.25">
+        </label>
+        <button id="applySizeButton" class="wide primary">Apply Size</button>
+      </div>
+      <div class="form-grid" style="margin-top: 8px;">
+        <label>X position
+          <input id="selectedX" type="number" step="0.25">
+        </label>
+        <label>Y position
+          <input id="selectedY" type="number" step="0.25">
+        </label>
+        <label>Z position
+          <input id="selectedZ" type="number" step="0.25">
+        </label>
+        <button id="applyPositionButton" class="wide primary">Apply Position</button>
+      </div>
+      <div class="actions">
+        <button id="rotateYButton">Rotate 90</button>
+        <button id="rotateXButton">Stand/Flip 90</button>
+        <button id="snapSelectedButton">Snap Selected</button>
+        <button id="lowerBraceButton">Lower Brace Height</button>
+        <button id="fitBetweenLegsButton">Fit Between Legs</button>
+        <button id="lockPartButton">Lock Part</button>
+        <button id="duplicateButton">Duplicate</button>
+        <button id="deletePartButton" class="danger">Delete Part</button>
+      </div>
+      <div id="supportWarning" class="support-warning"></div>
+    </div>
+
+    <div class="section">
+      <h2>Export</h2>
+      <button id="exportHtmlButton" class="wide primary">Export Current Model HTML</button>
+    </div>
+
+    <div class="section">
+      <h2>Parts in Model</h2>
+      <div id="partsList" class="parts-list"></div>
+    </div>
+  </aside>
+
+  <main id="viewer"></main>
+
+  <div class="hint">
+    Select a part, type exact X/Y/Z positions, then lock it. Snap to grid keeps parts aligned while dragging.
+  </div>
+  <div id="partTooltip" class="part-tooltip"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="woodshop3d.js"></script>
+
+  <script>
+    const viewer = WoodShop3D.createViewer({
+      container: "#viewer",
+      target: [0, 13, 0],
+      cameraPosition: [115, 80, 135]
+    });
+
+    const addedParts = [];
+    let partCounter = 1;
+    let draggedKind = null;
+    let selectedMesh = null;
+    let selectionBox = null;
+    let pointerStart = null;
+    const hoverRaycaster = new THREE.Raycaster();
+    const hoverPointer = new THREE.Vector2();
+    const partTooltip = document.getElementById("partTooltip");
+
+    function snapValue(value) {
+      const enabled = document.getElementById("snapToggle")?.checked;
+      const step = Number(document.getElementById("snapStepInput")?.value) || 0.75;
+      if (!enabled || step <= 0) return value;
+      return Math.round(value / step) * step;
+    }
+
+    function snapMesh(mesh) {
+      if (!mesh) return;
+      mesh.position.x = snapValue(mesh.position.x);
+      mesh.position.z = snapValue(mesh.position.z);
+    }
+
+    const partTemplates = {
+      "plywood-panel": {
+        name: "Plywood panel",
+        size: [24, 24, 0.75],
+        materialKey: "plywood"
+      },
+      shelf: {
+        name: "Shelf board",
+        size: [30, 0.75, 12],
+        materialKey: "plywood"
+      },
+      leg: {
+        name: "Leg",
+        size: [3.5, 30, 3.5],
+        materialKey: "skid"
+      },
+      cleat: {
+        name: "Cleat or apron",
+        size: [24, 1.5, 0.75],
+        materialKey: "pine"
+      }
+    };
+
+    function centerYFor(size) {
+      return size[1] / 2;
+    }
+
+    function nextId(prefix) {
+      const id = prefix + partCounter;
+      partCounter += 1;
+      return id;
+    }
+
+    function addPart(spec) {
+      const mesh = viewer.addBoard({
+        id: spec.id || nextId("B"),
+        name: spec.name || "Board",
+        size: spec.size,
+        position: spec.position,
+        materialKey: spec.materialKey || "plywood",
+        rotation: spec.rotation || [0, 0, 0],
+        draggable: spec.locked !== true
+      });
+      mesh.userData.locked = spec.locked === true;
+      addedParts.push(mesh);
+      renderPartsList();
+      return mesh;
+    }
+
+    function addTemplate(kind, x, z) {
+      const template = partTemplates[kind];
+      const size = template.size.slice();
+      const mesh = addPart({
+        id: nextId(kind.charAt(0).toUpperCase()),
+        name: template.name,
+        size: size,
+        position: [x, centerYFor(size), z],
+        materialKey: template.materialKey
+      });
+      setSelected(mesh);
+    }
+
+    function partToSpec(mesh) {
+      const part = mesh.userData.part;
+      return {
+        id: part.id,
+        name: part.name,
+        size: part.size.slice(),
+        position: [mesh.position.x, mesh.position.y, mesh.position.z],
+        rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z],
+        materialKey: part.materialKey || "plywood",
+        locked: mesh.userData.locked === true
+      };
+    }
+
+    function formatSize(size) {
+      return size.map(function (value) {
+        return Number(value).toFixed(2).replace(/\.00$/, "");
+      }).join(" x ");
+    }
+
+    function supportWarningsFor(mesh) {
+      if (!mesh) return [];
+      const part = mesh.userData.part;
+      const size = part.size;
+      const name = (part.name || "").toLowerCase();
+      const material = (part.materialKey || "").toLowerCase();
+      const width = Math.max(size[0], size[2]);
+      const thickness = Math.min(size[0], size[1], size[2]);
+      const isFlatBoard = size[1] <= 1.6 && size[0] >= 12 && size[2] >= 8;
+      const isShelfLike = isFlatBoard || name.includes("shelf") || name.includes("top") || name.includes("bottom");
+      const isFloorLevel = mesh.position.y - size[1] / 2 <= 2.5;
+      const warnings = [];
+
+      if (isShelfLike && width >= 18 && !name.includes("cleat") && !name.includes("stiffener") && !name.includes("apron")) {
+        warnings.push("Add cleats under both sides of this shelf/panel so it has ledges to sit on.");
+      }
+
+      if (isShelfLike && width >= 30 && thickness <= 0.85 && !name.includes("stiffener")) {
+        warnings.push("Add a front stiffener bar/lip for this long thin span to reduce sagging.");
+      }
+
+      if (isFloorLevel && (name.includes("bottom") || name.includes("base") || isShelfLike) && material !== "skid") {
+        warnings.push("Add base skids under this bottom piece if the project sits on the floor or a damp surface.");
+      }
+
+      return warnings;
+    }
+
+    function supportWarningHtml(mesh) {
+      const warnings = supportWarningsFor(mesh);
+      if (!warnings.length) return "";
+      return "<strong>Support check</strong>" + warnings.map(function (warning) {
+        return "Warning: " + warning;
+      }).join("<br>");
+    }
+
+    function tooltipHtml(mesh) {
+      const part = mesh.userData.part;
+      const warningHtml = supportWarningHtml(mesh);
+      return (
+        "<strong>" + part.id + " - " + part.name + "</strong>" +
+        "Size: " + formatSize(part.size) + " in<br>" +
+        "Position: " + Number(mesh.position.x.toFixed(2)) + ", " + Number(mesh.position.y.toFixed(2)) + ", " + Number(mesh.position.z.toFixed(2)) + "<br>" +
+        "Material: " + (part.materialKey || "plywood") + (mesh.userData.locked ? "<br>Locked in place" : "") +
+        (part.notes ? "<br>" + part.notes : "") +
+        (warningHtml ? "<br>" + warningHtml : "")
+      );
+    }
+
+    function setSelected(mesh) {
+      selectedMesh = mesh || null;
+
+      if (selectionBox) {
+        viewer.scene.remove(selectionBox);
+        selectionBox = null;
+      }
+
+      if (selectedMesh) {
+        selectionBox = new THREE.BoxHelper(selectedMesh, 0x90cdf4);
+        viewer.scene.add(selectionBox);
+      }
+
+      syncSelectedPanel();
+      renderPartsList();
+    }
+
+    function syncSelectedPanel() {
+      const name = document.getElementById("selectedName");
+      const width = document.getElementById("selectedWidth");
+      const height = document.getElementById("selectedHeight");
+      const depth = document.getElementById("selectedDepth");
+      const x = document.getElementById("selectedX");
+      const y = document.getElementById("selectedY");
+      const z = document.getElementById("selectedZ");
+      const lockButton = document.getElementById("lockPartButton");
+      const supportWarning = document.getElementById("supportWarning");
+
+      if (!selectedMesh) {
+        name.textContent = "No part selected";
+        width.value = "";
+        height.value = "";
+        depth.value = "";
+        x.value = "";
+        y.value = "";
+        z.value = "";
+        lockButton.textContent = "Lock Part";
+        supportWarning.style.display = "none";
+        supportWarning.innerHTML = "";
+        return;
+      }
+
+      const part = selectedMesh.userData.part;
+      name.textContent = part.id + " - " + part.name + (selectedMesh.userData.locked ? " (locked)" : "");
+      width.value = part.size[0];
+      height.value = part.size[1];
+      depth.value = part.size[2];
+      x.value = Number(selectedMesh.position.x.toFixed(3));
+      y.value = Number(selectedMesh.position.y.toFixed(3));
+      z.value = Number(selectedMesh.position.z.toFixed(3));
+      lockButton.textContent = selectedMesh.userData.locked ? "Unlock Part" : "Lock Part";
+      const warningHtml = supportWarningHtml(selectedMesh);
+      supportWarning.style.display = warningHtml ? "block" : "none";
+      supportWarning.innerHTML = warningHtml;
+    }
+
+    function replaceSelectedWith(spec) {
+      if (!selectedMesh) return;
+      const index = addedParts.indexOf(selectedMesh);
+      viewer.removeBoard(selectedMesh);
+      const mesh = viewer.addBoard(Object.assign({}, spec, { draggable: spec.locked !== true }));
+      mesh.userData.locked = spec.locked === true;
+
+      if (index >= 0) {
+        addedParts[index] = mesh;
+      } else {
+        addedParts.push(mesh);
+      }
+
+      setSelected(mesh);
+    }
+
+    function clearModel() {
+      setSelected(null);
+      while (addedParts.length) {
+        const mesh = addedParts.pop();
+        viewer.removeBoard(mesh);
+      }
+      renderPartsList();
+    }
+
+    function renderPartsList() {
+      const list = document.getElementById("partsList");
+      if (!addedParts.length) {
+        list.innerHTML = "<p>No parts yet.</p>";
+        return;
+      }
+
+      list.innerHTML = addedParts.map(function (mesh) {
+        const part = mesh.userData.part;
+        const size = formatSize(part.size);
+        const selectedClass = mesh === selectedMesh ? " selected" : "";
+        const lockedClass = mesh.userData.locked ? " locked" : "";
+        return (
+          '<div class="part-row' + selectedClass + lockedClass + '" data-id="' + part.id + '">' +
+          "<strong>" + part.id + "</strong>" +
+          "<span>" + part.name + (mesh.userData.locked ? " (locked)" : "") + "<br>" + size + " in</span>" +
+          '<div class="row-actions">' +
+          '<button type="button" data-action="duplicate" title="Duplicate part">D</button>' +
+          '<button type="button" data-action="lock" title="Lock or unlock part">L</button>' +
+          '<button type="button" data-action="delete" title="Remove part">X</button>' +
+          "</div>" +
+          "</div>"
+        );
+      }).join("");
+
+      list.querySelectorAll(".part-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+          const id = row.dataset.id;
+          const mesh = addedParts.find(function (partMesh) {
+            return partMesh.userData.part.id === id;
+          });
+          setSelected(mesh || null);
+        });
+
+        row.addEventListener("mouseenter", function () {
+          const id = row.dataset.id;
+          const mesh = addedParts.find(function (partMesh) {
+            return partMesh.userData.part.id === id;
+          });
+          if (!mesh) return;
+          row.title = mesh.userData.part.id + " - " + mesh.userData.part.name + "\\n" + formatSize(mesh.userData.part.size) + " in\\n" + (mesh.userData.part.notes || "");
+        });
+      });
+
+      list.querySelectorAll(".row-actions button").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+          event.stopPropagation();
+          const row = event.currentTarget.closest(".part-row");
+          const mesh = addedParts.find(function (partMesh) {
+            return partMesh.userData.part.id === row.dataset.id;
+          });
+          if (!mesh) return;
+          setSelected(mesh);
+
+          const action = event.currentTarget.dataset.action;
+          if (action === "duplicate") duplicateSelected();
+          if (action === "lock") toggleSelectedLock();
+          if (action === "delete") deleteSelected();
+        });
+      });
+    }
+
+    function dropPointFromEvent(event) {
+      const rect = viewer.renderer.domElement.getBoundingClientRect();
+      const pointer = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      const raycaster = new THREE.Raycaster();
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const point = new THREE.Vector3();
+      raycaster.setFromCamera(pointer, viewer.camera);
+      raycaster.ray.intersectPlane(plane, point);
+      return point;
+    }
+
+    function loadShelfA() {
+      clearModel();
+      WoodShop3D.shelfAParts().forEach(function (part) {
+        addPart(Object.assign({}, part, { draggable: true }));
+      });
+    }
+
+    function loadTabletopShelf() {
+      clearModel();
+      WoodShop3D.tabletopShelfParts().forEach(function (part) {
+        addPart(Object.assign({}, part, { draggable: true }));
+      });
+    }
+
+    function loadBookcase() {
+      clearModel();
+      WoodShop3D.bookcaseParts().forEach(function (part) {
+        addPart(Object.assign({}, part, { draggable: true }));
+      });
+    }
+
+    function loadWorkbench() {
+      clearModel();
+      WoodShop3D.workbenchParts().forEach(function (part) {
+        addPart(Object.assign({}, part, { draggable: true }));
+      });
+    }
+
+    function loadShoeRack() {
+      clearModel();
+      WoodShop3D.shoeRackParts().forEach(function (part) {
+        addPart(Object.assign({}, part, { draggable: true }));
+      });
+    }
+
+    function loadCubbies() {
+      clearModel();
+      WoodShop3D.storageCubbiesParts().forEach(function (part) {
+        addPart(Object.assign({}, part, { draggable: true }));
+      });
+    }
+
+    function loadTable() {
+      clearModel();
+      [
+        { id: "TOP", name: "Tabletop", size: [48, 1.5, 24], position: [0, 30.75, 0], materialKey: "plywood", notes: "Main table surface." },
+        { id: "L1", name: "Front left leg", size: [3.5, 29.25, 3.5], position: [-20, 14.625, 10], materialKey: "skid", notes: "2x4 table leg." },
+        { id: "L2", name: "Front right leg", size: [3.5, 29.25, 3.5], position: [20, 14.625, 10], materialKey: "skid", notes: "2x4 table leg." },
+        { id: "L3", name: "Back left leg", size: [3.5, 29.25, 3.5], position: [-20, 14.625, -10], materialKey: "skid", notes: "2x4 table leg." },
+        { id: "L4", name: "Back right leg", size: [3.5, 29.25, 3.5], position: [20, 14.625, -10], materialKey: "skid", notes: "2x4 table leg." },
+        { id: "A1", name: "Front apron", size: [42, 3.5, 0.75], position: [0, 27, 11.625], materialKey: "pine", notes: "Apron braces the legs and supports the tabletop." },
+        { id: "A2", name: "Back apron", size: [42, 3.5, 0.75], position: [0, 27, -11.625], materialKey: "pine", notes: "Apron braces the legs and supports the tabletop." },
+        { id: "A3", name: "Left side apron", size: [0.75, 3.5, 18], position: [-23.625, 27, 0], materialKey: "pine", notes: "Side apron braces front and back legs." },
+        { id: "A4", name: "Right side apron", size: [0.75, 3.5, 18], position: [23.625, 27, 0], materialKey: "pine", notes: "Side apron braces front and back legs." },
+        { id: "S1", name: "Front top stiffener", size: [48, 1.5, 0.75], position: [0, 29.625, 11.625], materialKey: "pine", notes: "Stiffener lip reduces tabletop flex." },
+        { id: "S2", name: "Back top stiffener", size: [48, 1.5, 0.75], position: [0, 29.625, -11.625], materialKey: "pine", notes: "Stiffener lip reduces tabletop flex." }
+      ].forEach(addPart);
+    }
+
+    function loadChair() {
+      clearModel();
+      [
+        { id: "SEAT", name: "Seat", size: [18, 1.5, 18], position: [0, 18.75, 0], materialKey: "plywood", notes: "Chair seat panel." },
+        { id: "FL", name: "Front left leg", size: [1.5, 18, 1.5], position: [-7.5, 9, 7.5], materialKey: "pine", notes: "Front chair leg." },
+        { id: "FR", name: "Front right leg", size: [1.5, 18, 1.5], position: [7.5, 9, 7.5], materialKey: "pine", notes: "Front chair leg." },
+        { id: "BL", name: "Back left post", size: [1.5, 36, 1.5], position: [-7.5, 18, -7.5], materialKey: "pine", notes: "Tall rear post supports the back rest." },
+        { id: "BR", name: "Back right post", size: [1.5, 36, 1.5], position: [7.5, 18, -7.5], materialKey: "pine", notes: "Tall rear post supports the back rest." },
+        { id: "BACK", name: "Back rest", size: [18, 6, 0.75], position: [0, 31, -8.25], materialKey: "plywood", notes: "Back rest panel." },
+        { id: "ST1", name: "Front lower stretcher", size: [15, 1.5, 0.75], position: [0, 8, 7.5], materialKey: "pine", notes: "Stretcher braces the legs." },
+        { id: "ST2", name: "Back lower stretcher", size: [15, 1.5, 0.75], position: [0, 8, -7.5], materialKey: "pine", notes: "Stretcher braces the rear posts." },
+        { id: "ST3", name: "Left side stretcher", size: [0.75, 1.5, 15], position: [-7.5, 8, 0], materialKey: "pine", notes: "Side stretcher braces front and back legs." },
+        { id: "ST4", name: "Right side stretcher", size: [0.75, 1.5, 15], position: [7.5, 8, 0], materialKey: "pine", notes: "Side stretcher braces front and back legs." }
+      ].forEach(addPart);
+    }
+
+    function selectPartFromCanvas(event) {
+      if (!pointerStart) return;
+      const moved = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
+      pointerStart = null;
+      if (moved > 4) return;
+
+      const rect = viewer.renderer.domElement.getBoundingClientRect();
+      const pointer = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(pointer, viewer.camera);
+      const hits = raycaster.intersectObjects(addedParts, false);
+      setSelected(hits.length ? hits[0].object : null);
+    }
+
+    function applySelectedSize() {
+      if (!selectedMesh || selectedMesh.userData.locked) return;
+      const size = [
+        Number(document.getElementById("selectedWidth").value) || 1,
+        Number(document.getElementById("selectedHeight").value) || 1,
+        Number(document.getElementById("selectedDepth").value) || 1
+      ];
+      const spec = partToSpec(selectedMesh);
+      spec.size = size;
+      replaceSelectedWith(spec);
+    }
+
+    function applySelectedPosition() {
+      if (!selectedMesh || selectedMesh.userData.locked) return;
+      selectedMesh.position.x = Number(document.getElementById("selectedX").value) || 0;
+      selectedMesh.position.y = Number(document.getElementById("selectedY").value) || 0;
+      selectedMesh.position.z = Number(document.getElementById("selectedZ").value) || 0;
+      snapMesh(selectedMesh);
+      syncSelectedPanel();
+      if (selectionBox) selectionBox.update();
+    }
+
+    function rotateSelected(axis) {
+      if (!selectedMesh || selectedMesh.userData.locked) return;
+      selectedMesh.rotation[axis] += Math.PI / 2;
+      if (selectionBox) selectionBox.update();
+    }
+
+    function snapSelected() {
+      if (!selectedMesh || selectedMesh.userData.locked) return;
+      snapMesh(selectedMesh);
+      syncSelectedPanel();
+      if (selectionBox) selectionBox.update();
+    }
+
+    function legLikeParts() {
+      return addedParts.filter(function (mesh) {
+        const size = mesh.userData.part.size;
+        const name = (mesh.userData.part.name || "").toLowerCase();
+        const isTall = size[1] >= Math.max(size[0], size[2]) * 3;
+        return mesh !== selectedMesh && isTall && (name.includes("leg") || name.includes("post"));
+      });
+    }
+
+    function selectedRunsAlongX() {
+      const size = selectedMesh.userData.part.size;
+      const yRot = Math.abs((selectedMesh.rotation.y % Math.PI + Math.PI) % Math.PI);
+      const baseRunsX = size[0] >= size[2];
+      const rotatedQuarterTurn = Math.abs(yRot - Math.PI / 2) < 0.01;
+      return rotatedQuarterTurn ? !baseRunsX : baseRunsX;
+    }
+
+    function lowerBraceHeight() {
+      if (!selectedMesh || selectedMesh.userData.locked) return;
+      const legs = legLikeParts();
+      const selectedHeight = selectedMesh.userData.part.size[1];
+      const tallestLeg = legs.reduce(function (max, leg) {
+        return Math.max(max, leg.userData.part.size[1]);
+      }, 0);
+      const targetCenterY = tallestLeg ? Math.max(6, tallestLeg * 0.25) : Math.max(6, selectedHeight / 2);
+      selectedMesh.position.y = targetCenterY;
+      snapMesh(selectedMesh);
+      syncSelectedPanel();
+      if (selectionBox) selectionBox.update();
+    }
+
+    function fitBetweenLegs() {
+      if (!selectedMesh || selectedMesh.userData.locked) return;
+      const legs = legLikeParts();
+      if (legs.length < 2) return;
+
+      const runX = selectedRunsAlongX();
+      const selectedPos = selectedMesh.position;
+      const candidates = [];
+
+      for (let i = 0; i < legs.length; i += 1) {
+        for (let j = i + 1; j < legs.length; j += 1) {
+          const a = legs[i];
+          const b = legs[j];
+          const sameLineDistance = runX
+            ? Math.abs(a.position.z - b.position.z) + Math.abs(((a.position.z + b.position.z) / 2) - selectedPos.z)
+            : Math.abs(a.position.x - b.position.x) + Math.abs(((a.position.x + b.position.x) / 2) - selectedPos.x);
+          const span = runX ? Math.abs(a.position.x - b.position.x) : Math.abs(a.position.z - b.position.z);
+          if (span <= 1) continue;
+          candidates.push({ a: a, b: b, score: sameLineDistance, span: span });
+        }
+      }
+
+      candidates.sort(function (left, right) {
+        return left.score - right.score;
+      });
+
+      const pair = candidates[0];
+      if (!pair) return;
+
+      const spec = partToSpec(selectedMesh);
+      const aSize = pair.a.userData.part.size;
+      const bSize = pair.b.userData.part.size;
+      const aLegThickness = runX ? aSize[0] : aSize[2];
+      const bLegThickness = runX ? bSize[0] : bSize[2];
+      const insideSpan = Math.max(1, pair.span - aLegThickness / 2 - bLegThickness / 2);
+
+      if (runX) {
+        spec.size[0] = insideSpan;
+        spec.position[0] = (pair.a.position.x + pair.b.position.x) / 2;
+        spec.position[2] = (pair.a.position.z + pair.b.position.z) / 2;
+      } else {
+        spec.size[2] = insideSpan;
+        spec.position[0] = (pair.a.position.x + pair.b.position.x) / 2;
+        spec.position[2] = (pair.a.position.z + pair.b.position.z) / 2;
+      }
+
+      spec.position[1] = selectedMesh.position.y;
+      replaceSelectedWith(spec);
+      snapSelected();
+    }
+
+    function toggleSelectedLock() {
+      if (!selectedMesh) return;
+      selectedMesh.userData.locked = !selectedMesh.userData.locked;
+      syncSelectedPanel();
+      renderPartsList();
+    }
+
+    function deleteSelected() {
+      if (!selectedMesh) return;
+      const index = addedParts.indexOf(selectedMesh);
+      const mesh = selectedMesh;
+      setSelected(null);
+      if (index >= 0) addedParts.splice(index, 1);
+      viewer.removeBoard(mesh);
+      renderPartsList();
+    }
+
+    function duplicateSelected() {
+      if (!selectedMesh) return;
+      const spec = partToSpec(selectedMesh);
+      spec.id = nextId("D");
+      spec.name = spec.name + " copy";
+      spec.locked = false;
+      spec.position = [spec.position[0] + 4, spec.position[1], spec.position[2] + 4];
+      const mesh = addPart(spec);
+      setSelected(mesh);
+    }
+
+    function handlePartHover(event) {
+      const rect = viewer.renderer.domElement.getBoundingClientRect();
+      hoverPointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      hoverPointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      hoverRaycaster.setFromCamera(hoverPointer, viewer.camera);
+
+      const hits = hoverRaycaster.intersectObjects(addedParts, false);
+      if (!hits.length) {
+        partTooltip.style.display = "none";
+        viewer.renderer.domElement.style.cursor = "";
+        return;
+      }
+
+      const mesh = hits[0].object;
+      partTooltip.innerHTML = tooltipHtml(mesh);
+      partTooltip.style.display = "block";
+      partTooltip.style.left = Math.min(event.clientX + 14, window.innerWidth - 300) + "px";
+      partTooltip.style.top = Math.min(event.clientY + 14, window.innerHeight - 160) + "px";
+      viewer.renderer.domElement.style.cursor = mesh.userData.locked ? "not-allowed" : "pointer";
+    }
+
+    function hidePartTooltip() {
+      partTooltip.style.display = "none";
+      viewer.renderer.domElement.style.cursor = "";
+    }
+
+    async function exportCurrentModelHtml() {
+      const exportedParts = addedParts.map(partToSpec);
+      let helperScript = '<script src="woodshop3d.js"></' + 'script>';
+
+      try {
+        const response = await fetch("woodshop3d.js");
+        if (response.ok) {
+          const helperSource = await response.text();
+          helperScript = "<script>\n" + helperSource.replace(/<\/script/gi, "<\\/script") + "\n</" + "script>";
+        }
+      } catch (error) {
+        console.warn("Export will reference woodshop3d.js instead of embedding it.", error);
+      }
+
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exported Wood 3D Model</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #171923; color: #edf2f7; font-family: Arial, sans-serif; }
+    #viewer { width: 100vw; height: 100vh; }
+    #panel { position: absolute; top: 16px; left: 16px; padding: 12px 14px; border: 1px solid #4a5568; border-radius: 8px; background: rgba(26, 32, 44, 0.9); line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div id="panel"><strong>Exported Wood Model</strong><br>${exportedParts.length} parts<br>Drag to rotate. Scroll to zoom.</div>
+  <div id="viewer"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>
+  ${helperScript}
+  <script>
+    const parts = ${JSON.stringify(exportedParts, null, 2)};
+    const viewer = WoodShop3D.createViewer({ container: "#viewer", target: [0, 18, 0], cameraPosition: [115, 80, 135] });
+    viewer.addBoards(parts);
+    viewer.animate();
+  <\/script>
+</body>
+</html>
+`;
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "wood_model_export.html";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    document.querySelectorAll(".tile").forEach(function (tile) {
+      tile.addEventListener("dragstart", function (event) {
+        draggedKind = event.currentTarget.dataset.kind;
+        event.dataTransfer.setData("text/plain", draggedKind);
+      });
+    });
+
+    viewer.renderer.domElement.addEventListener("dragover", function (event) {
+      event.preventDefault();
+    });
+
+    viewer.renderer.domElement.addEventListener("pointerdown", function (event) {
+      pointerStart = { x: event.clientX, y: event.clientY };
+      hidePartTooltip();
+    });
+
+    viewer.renderer.domElement.addEventListener("pointerup", selectPartFromCanvas);
+    viewer.renderer.domElement.addEventListener("pointermove", handlePartHover);
+    viewer.renderer.domElement.addEventListener("pointerleave", hidePartTooltip);
+
+    viewer.renderer.domElement.addEventListener("woodshop3d-part-moved", function (event) {
+      const mesh = event.detail.mesh;
+      if (mesh.userData.locked) return;
+      snapMesh(mesh);
+      if (document.getElementById("autoLockToggle").checked) {
+        mesh.userData.locked = true;
+        renderPartsList();
+      }
+      if (mesh === selectedMesh) {
+        syncSelectedPanel();
+        if (selectionBox) selectionBox.update();
+      }
+    });
+
+    viewer.renderer.domElement.addEventListener("drop", function (event) {
+      event.preventDefault();
+      const kind = event.dataTransfer.getData("text/plain") || draggedKind;
+      if (!kind || !partTemplates[kind]) return;
+      const point = dropPointFromEvent(event);
+      addTemplate(kind, point.x, point.z);
+      draggedKind = null;
+    });
+
+    document.getElementById("addCustomButton").addEventListener("click", function () {
+      const size = [
+        Number(document.getElementById("widthInput").value) || 1,
+        Number(document.getElementById("heightInput").value) || 1,
+        Number(document.getElementById("depthInput").value) || 1
+      ];
+      const mesh = addPart({
+        id: nextId("C"),
+        name: "Custom board",
+        size: size,
+        position: [0, centerYFor(size), 0],
+        materialKey: document.getElementById("materialInput").value
+      });
+      setSelected(mesh);
+    });
+
+    document.getElementById("loadShelfButton").addEventListener("click", loadShelfA);
+    document.getElementById("loadTabletopShelfButton").addEventListener("click", loadTabletopShelf);
+    document.getElementById("loadBookcaseButton").addEventListener("click", loadBookcase);
+    document.getElementById("loadWorkbenchButton").addEventListener("click", loadWorkbench);
+    document.getElementById("loadShoeRackButton").addEventListener("click", loadShoeRack);
+    document.getElementById("loadCubbiesButton").addEventListener("click", loadCubbies);
+    document.getElementById("loadTableButton").addEventListener("click", loadTable);
+    document.getElementById("loadChairButton").addEventListener("click", loadChair);
+    document.getElementById("clearButton").addEventListener("click", clearModel);
+    document.getElementById("applySizeButton").addEventListener("click", applySelectedSize);
+    document.getElementById("applyPositionButton").addEventListener("click", applySelectedPosition);
+    document.getElementById("rotateYButton").addEventListener("click", function () { rotateSelected("y"); });
+    document.getElementById("rotateXButton").addEventListener("click", function () { rotateSelected("x"); });
+    document.getElementById("snapSelectedButton").addEventListener("click", snapSelected);
+    document.getElementById("lowerBraceButton").addEventListener("click", lowerBraceHeight);
+    document.getElementById("fitBetweenLegsButton").addEventListener("click", fitBetweenLegs);
+    document.getElementById("lockPartButton").addEventListener("click", toggleSelectedLock);
+    document.getElementById("duplicateButton").addEventListener("click", duplicateSelected);
+    document.getElementById("deletePartButton").addEventListener("click", deleteSelected);
+    document.getElementById("exportHtmlButton").addEventListener("click", exportCurrentModelHtml);
+
+    viewer.enableSimpleDragging();
+    renderPartsList();
+    syncSelectedPanel();
+    function updateSelectionBox() {
+      if (selectionBox) selectionBox.update();
+      requestAnimationFrame(updateSelectionBox);
+    }
+    updateSelectionBox();
+    viewer.animate();
+  </script>
+</body>
+</html>
