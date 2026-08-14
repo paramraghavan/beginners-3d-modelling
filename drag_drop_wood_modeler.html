@@ -29,6 +29,18 @@
 
     .section { margin-bottom: 12px; }
     label { font-size: 11px; color: #a1a1a6; display: block; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hint-card, .selection-card {
+      background: #242426; border: 1px solid #3a3a3c; border-radius: 10px;
+      padding: 10px 12px; font-size: 12px; line-height: 1.45; color: #d1d1d6;
+    }
+    .hint-card strong, .selection-card strong { color: #f2f2f7; }
+    .hint-card { border-left: 3px solid #e5a93c; }
+    .selection-card { border-left: 3px solid #64d2ff; }
+    .selection-card.empty { border-left-color: #636366; color: #a1a1a6; }
+    .selection-title { color: #64d2ff; font-weight: 800; margin-bottom: 4px; }
+    .selection-meta { font-size: 11px; color: #a1a1a6; margin-top: 4px; }
+    .advice-list { margin: 7px 0 0 0; padding-left: 16px; color: #ffd60a; }
+    .advice-list li { margin-bottom: 3px; }
 
     select, button, input {
       width: 100%; min-height: 42px; padding: 8px 12px; margin-bottom: 6px; border-radius: 8px;
@@ -64,6 +76,21 @@
     }
     .tt-title { color: #e5a93c; font-weight: 700; font-size: 13px; }
     .tt-tag { display: inline-block; background: #3a3a3c; color: #d1d1d6; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; }
+    #tt-advice { color: #ffd60a; margin-top: 4px; font-size: 11px; }
+
+    #app-status {
+      position: absolute; right: 16px; bottom: 16px; max-width: 360px;
+      background: rgba(28, 28, 30, 0.95); border: 1px solid #3a3a3c;
+      border-left: 4px solid #64d2ff; color: #f2f2f7; padding: 12px 14px;
+      border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+      font-size: 13px; line-height: 1.35; z-index: 1200; opacity: 0;
+      transform: translateY(12px); pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    #app-status.visible { opacity: 1; transform: translateY(0); }
+    #app-status.success { border-left-color: #30d158; }
+    #app-status.warn { border-left-color: #ffd60a; }
+    #app-status.error { border-left-color: #ff453a; }
 
     /* Modals */
     .modal-overlay {
@@ -102,6 +129,9 @@
         border-radius: 3px; margin: 0 auto 10px auto; cursor: pointer;
       }
       .modal-box { padding: 16px; }
+      #app-status {
+        left: 12px; right: 12px; bottom: calc(60vh + 12px); max-width: none;
+      }
     }
   </style>
 
@@ -121,8 +151,11 @@
     <div id="tt-dims">Dimensions: -</div>
     <div id="tt-species">Species: -</div>
     <div id="tt-bf">Board Footage: -</div>
+    <div id="tt-advice"></div>
     <div id="tt-desc" style="font-style:italic; color:#a1a1a6; margin-top:4px; border-top:1px solid #2c2c2e; padding-top:4px;"></div>
   </div>
+
+  <div id="app-status" role="status" aria-live="polite"></div>
 
   <!-- Responsive Control Sidebar -->
   <div id="ui-panel">
@@ -130,6 +163,12 @@
     <div class="panel-header">
       <h3>🪵 Scout Wood Modeler</h3>
       <button class="help-btn" id="open-help-btn">? Help</button>
+    </div>
+
+    <div class="section">
+      <div class="hint-card">
+        <strong>Quick start:</strong> choose a preset, click a wood part, then use Move, Rotate, Resize, Delete, Cut List, or Export. Hover a part to see dimensions and build advice.
+      </div>
     </div>
 
     <!-- History Controls -->
@@ -174,6 +213,7 @@
     <!-- Object Manipulation Controls -->
     <div class="section">
       <label>3. Move & Rotate Selected Part</label>
+      <div id="selection-summary" class="selection-card empty">No part selected yet. Click any board in the 3D view.</div>
       <div class="row">
         <button id="mode-translate" class="secondary">Move (W)</button>
         <button id="mode-rotate" class="secondary">Rotate (E)</button>
@@ -181,6 +221,7 @@
 
       <label style="margin-top:10px;">4. Surface Lock & Attach</label>
       <button id="snap-btn" class="secondary">Lock / Flush Attach Face</button>
+      <button id="duplicate-btn" class="secondary">Duplicate Selected Part</button>
 
       <label style="margin-top:10px;">5. Multi-Point Array Copy</label>
       <button id="path-mode-btn" class="secondary">Duplicate Along Path Points</button>
@@ -210,7 +251,7 @@
   </div>
 
   <!-- Help Guide Modal -->
-  <div id="help-modal" class="modal-overlay">
+  <div id="help-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <h2>🪵 Scout Woodworking Modeler Guide</h2>
       <div class="step-item"><strong>📱 Mobile Touch & Desktop Navigation:</strong> Single finger / Left-click to rotate camera. Two-finger pinch / Scroll wheel to zoom. Right-click / two-finger drag to pan across workshop floor.</div>
@@ -291,6 +332,96 @@
 
     const container = document.getElementById('canvas-container');
     const tooltip = document.getElementById('tooltip');
+    const appStatus = document.getElementById('app-status');
+    const selectionSummary = document.getElementById('selection-summary');
+    let statusTimer = null;
+
+    function formatDims(dims) {
+      return `${dims.w}" W x ${dims.h}" H x ${dims.d}" D`;
+    }
+
+    function speciesKeyFromName(speciesName) {
+      for (let k in SPECIES) {
+        if (SPECIES[k].name === speciesName) return k;
+      }
+      return "PINE";
+    }
+
+    function setStatus(message, type = "info") {
+      clearTimeout(statusTimer);
+      appStatus.className = "";
+      appStatus.classList.add("visible");
+      if (type !== "info") appStatus.classList.add(type);
+      appStatus.textContent = message;
+      statusTimer = setTimeout(() => appStatus.classList.remove("visible"), 4200);
+    }
+
+    function getSupportAdvice(group) {
+      if (!group || !group.userData || !group.userData.dimensions) return [];
+      const ud = group.userData;
+      const dims = ud.dimensions;
+      const nameDesc = `${ud.name || ""} ${ud.description || ""}`.toLowerCase();
+      const advice = [];
+      const isLongFlatSpan = dims.h <= 1.5 && Math.max(dims.w, dims.d) >= 36;
+      const spanNameTerms = ["shelf", "deck", "panel", "slat", "plank", "top", "seat", "worktop", "tabletop"];
+      const bottomTerms = ["base", "bottom", "skid", "floor", "toe kick"];
+      const isNearFloor = group.position.y - (dims.h / 2) <= 2.5;
+
+      if (isLongFlatSpan && spanNameTerms.some(term => nameDesc.includes(term))) {
+        advice.push("Long flat span: add cleats or a front stiffener to reduce sag.");
+      }
+      if ((nameDesc.includes("leg") || nameDesc.includes("post")) && dims.h >= 24) {
+        advice.push("Tall support: brace opposite legs with aprons or stretchers.");
+      }
+      if ((isNearFloor || bottomTerms.some(term => nameDesc.includes(term))) && dims.h <= 3 && Math.max(dims.w, dims.d) >= 30) {
+        advice.push("Low base part: use skids or feet if it will sit on a floor.");
+      }
+      if ((nameDesc.includes("backrest") || nameDesc.includes("side panel") || nameDesc.includes("divider")) && dims.h >= 18 && dims.h > Math.max(dims.w, dims.d)) {
+        advice.push("Vertical panel: add rear bracing or a back panel for racking resistance.");
+      }
+
+      return advice.slice(0, 2);
+    }
+
+    function determinePartType(preset) {
+      const nameDesc = `${preset.name || ""} ${preset.desc || ""}`.toLowerCase();
+      if (nameDesc.includes("leg") || nameDesc.includes("post")) return "Vertical Support";
+      if (nameDesc.includes("cleat") || nameDesc.includes("stiffener") || nameDesc.includes("apron") || nameDesc.includes("brace") || nameDesc.includes("rail") || nameDesc.includes("stretcher")) return "Support / Brace";
+      if (nameDesc.includes("slat") || nameDesc.includes("plank")) return "Slat / Board";
+      if (preset.w > 20 || preset.d > 20) return "Sheet / Panel";
+      return "Dimensional Lumber";
+    }
+
+    function updateSelectionSummary() {
+      if (!selectedPart) {
+        selectionSummary.className = "selection-card empty";
+        selectionSummary.innerHTML = "No part selected yet. Click any board in the 3D view.";
+        document.getElementById('delete-btn').disabled = true;
+        document.getElementById('apply-resize-btn').disabled = true;
+        document.getElementById('duplicate-btn').disabled = true;
+        return;
+      }
+
+      const ud = selectedPart.userData;
+      const dims = ud.dimensions;
+      const boardFeet = ((dims.w * dims.h * dims.d) / 144).toFixed(2);
+      const advice = getSupportAdvice(selectedPart);
+      const adviceHtml = advice.length
+        ? `<ul class="advice-list">${advice.map(item => `<li>${item}</li>`).join("")}</ul>`
+        : `<div class="selection-meta">No extra bracing warning for this part.</div>`;
+
+      selectionSummary.className = "selection-card";
+      selectionSummary.innerHTML = `
+        <div class="selection-title">${ud.name}</div>
+        <div><strong>Size:</strong> ${formatDims(dims)}</div>
+        <div><strong>Material:</strong> ${ud.species}</div>
+        <div class="selection-meta">${ud.type} | ${boardFeet} board feet</div>
+        ${adviceHtml}
+      `;
+      document.getElementById('delete-btn').disabled = false;
+      document.getElementById('apply-resize-btn').disabled = false;
+      document.getElementById('duplicate-btn').disabled = false;
+    }
 
     function init() {
       scene = new THREE.Scene();
@@ -316,6 +447,8 @@
         orbitControls.enabled = !e.value;
         if (!e.value) {
           saveState();
+          updateSelectionSummary();
+          if (selectedPart) setStatus(`Moved ${selectedPart.userData.name}. Use the dimension boxes for exact sizing.`, "success");
         }
       });
       scene.add(transformControls);
@@ -351,8 +484,10 @@
           e.preventDefault();
         } else if (e.key === "w" || e.key === "W") {
           transformControls.setMode("translate");
+          setStatus("Move mode is active. Drag the colored arrows to place the selected part.");
         } else if (e.key === "e" || e.key === "E") {
           transformControls.setMode("rotate");
+          setStatus("Rotate mode is active. Drag the colored rings to turn the selected part.");
         } else if (e.key === "Delete" || e.key === "Backspace") {
           deleteSelected();
         }
@@ -365,11 +500,18 @@
       document.getElementById('delete-btn').addEventListener('click', deleteSelected);
       document.getElementById('apply-resize-btn').addEventListener('click', applyResize);
       document.getElementById('snap-btn').addEventListener('click', toggleSnapMode);
+      document.getElementById('duplicate-btn').addEventListener('click', duplicateSelectedPart);
       document.getElementById('path-mode-btn').addEventListener('click', togglePathMode);
       document.getElementById('finish-path-btn').addEventListener('click', executePathDuplication);
 
-      document.getElementById('mode-translate').addEventListener('click', () => transformControls.setMode("translate"));
-      document.getElementById('mode-rotate').addEventListener('click', () => transformControls.setMode("rotate"));
+      document.getElementById('mode-translate').addEventListener('click', () => {
+        transformControls.setMode("translate");
+        setStatus("Move mode is active. Drag the colored arrows to position the part.");
+      });
+      document.getElementById('mode-rotate').addEventListener('click', () => {
+        transformControls.setMode("rotate");
+        setStatus("Rotate mode is active. Drag the colored rings to turn the part.");
+      });
 
       document.getElementById('open-help-btn').addEventListener('click', () => document.getElementById('help-modal').style.display = "flex");
       document.getElementById('close-help-btn').addEventListener('click', () => document.getElementById('help-modal').style.display = "none");
@@ -386,6 +528,8 @@
 
       // Default Spawn: Chemistry Lab floor shelf A
       spawnFurnitureAssembly("floor_shelf");
+      updateSelectionSummary();
+      setStatus("Loaded the floor shelf starter model. Click any board to edit it.", "success");
 
       animate();
     }
@@ -432,6 +576,7 @@
       const previousState = undoStack[undoStack.length - 1];
       applyStateSnapshot(JSON.parse(previousState));
       updateUndoRedoUI();
+      setStatus("Undid the last workspace change.");
     }
 
     function redo() {
@@ -440,6 +585,7 @@
       undoStack.push(nextState);
       applyStateSnapshot(JSON.parse(nextState));
       updateUndoRedoUI();
+      setStatus("Redid the workspace change.");
     }
 
     function removeHighlight() {
@@ -469,17 +615,12 @@
 
       isBatchAction = true;
       snapshotData.forEach(item => {
-        let matchedKey = "PINE";
-        for (let k in SPECIES) {
-          if (SPECIES[k].name === item.speciesName) matchedKey = k;
-        }
-
         const preset = {
           name: item.name,
           w: item.dimensions.w,
           h: item.dimensions.h,
           d: item.dimensions.d,
-          species: matchedKey,
+          species: speciesKeyFromName(item.speciesName),
           desc: item.description
         };
 
@@ -488,6 +629,7 @@
       });
       isBatchAction = false;
       tooltip.style.display = "none";
+      updateSelectionSummary();
     }
 
     // --- INDIVIDUAL PART SPAWNER ---
@@ -516,7 +658,7 @@
         dimensions: { w: preset.w, h: preset.h, d: preset.d },
         species: SPECIES[matKey].name,
         description: preset.desc || "",
-        type: preset.w > 20 ? "Sheet / Panel" : "Dimensional Lumber"
+        type: determinePartType(preset)
       };
 
       if (customPosition) {
@@ -652,15 +794,18 @@
       if (PRESETS[val]) {
         addWoodPartInternal(PRESETS[val]);
         saveState();
+        setStatus(`Added ${PRESETS[val].name}. It is selected and ready to move or resize.`, "success");
       } else {
         spawnFurnitureAssembly(val);
+        setStatus(`Loaded ${document.getElementById('preset-select').selectedOptions[0].text}. Click any part to edit it.`, "success");
       }
+      updateSelectionSummary();
     }
 
     // --- PARTS LIST & CUT LIST GENERATOR ---
     function generatePartsList() {
       if (woodParts.length === 0) {
-        alert("Workspace is empty! Add wood parts first to generate a parts list.");
+        setStatus("Workspace is empty. Add wood parts before generating a cut list.", "warn");
         return;
       }
 
@@ -723,6 +868,7 @@
 
       document.getElementById('parts-table-container').innerHTML = html;
       document.getElementById('parts-modal').style.display = "flex";
+      setStatus(`Generated a cut list for ${woodParts.length} parts.`, "success");
     }
 
     function printPartsList() {
@@ -775,6 +921,8 @@
           document.getElementById('tt-dims').innerText = `Dimensions: ${dims.w}" W × ${dims.h}" H × ${dims.d}" D`;
           document.getElementById('tt-species').innerText = `Species: ${ud.species}`;
           document.getElementById('tt-bf').innerText = `Board Feet: ${boardFeet} BF`;
+          const advice = getSupportAdvice(rootGroup);
+          document.getElementById('tt-advice').innerText = advice.length ? `Build note: ${advice[0]}` : "";
           document.getElementById('tt-desc').innerText = ud.description || "";
           return;
         }
@@ -838,6 +986,10 @@
       document.getElementById('dim-w').value = dims.w;
       document.getElementById('dim-h').value = dims.h;
       document.getElementById('dim-d').value = dims.d;
+      updateSelectionSummary();
+      if (!isBatchAction) {
+        setStatus(`Selected ${selectedPart.userData.name}. Use Move, Rotate, Resize, Duplicate, or Delete.`);
+      }
     }
 
     // --- SURFACE LOCK & PATH DUPLICATION ---
@@ -846,6 +998,7 @@
       const btn = document.getElementById('snap-btn');
       btn.className = isSnapMode ? "active" : "secondary";
       btn.innerText = isSnapMode ? "Click Target Surface..." : "Lock / Flush Attach Face";
+      setStatus(isSnapMode ? "Snap mode on. Click the surface where this part should attach flush." : "Snap mode off.");
     }
 
     function snapPartToFace(sourceGroup, targetMesh, hitFace, hitPoint) {
@@ -860,6 +1013,32 @@
       const offset = worldNormal.clone().multiplyScalar(size.y / 2);
       sourceGroup.position.copy(hitPoint).add(offset);
       sourceGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), worldNormal);
+      updateSelectionSummary();
+      setStatus(`Snapped ${sourceGroup.userData.name} flush to the target face.`, "success");
+    }
+
+    function duplicateSelectedPart() {
+      if (!selectedPart) {
+        setStatus("Select a part before duplicating.", "warn");
+        return;
+      }
+
+      const sourceName = selectedPart.userData.name;
+      const dims = selectedPart.userData.dimensions;
+      const copyPreset = {
+        name: `${sourceName} (Copy)`,
+        w: dims.w,
+        h: dims.h,
+        d: dims.d,
+        species: speciesKeyFromName(selectedPart.userData.species),
+        desc: selectedPart.userData.description
+      };
+
+      const offset = new THREE.Vector3(Math.max(4, dims.w + 2), 0, Math.max(4, Math.min(8, dims.d / 4)));
+      const newGroup = addWoodPartInternal(copyPreset, selectedPart.position.clone().add(offset));
+      newGroup.quaternion.copy(selectedPart.quaternion);
+      saveState();
+      setStatus(`Duplicated ${sourceName}. The copy is selected and slightly offset.`, "success");
     }
 
     function togglePathMode() {
@@ -877,17 +1056,19 @@
         btn.innerText = "Cancel Path Mode";
         instructions.style.display = "block";
         finishBtn.style.display = "block";
+        setStatus("Path copy mode on. Click two or more points, then Finish Path & Duplicate.");
       } else {
         btn.className = "secondary";
         btn.innerText = "Duplicate Along Path Points";
         instructions.style.display = "none";
         finishBtn.style.display = "none";
+        setStatus("Path copy mode off.");
       }
     }
 
     function executePathDuplication() {
       if (!selectedPart || pathPoints.length < 2) {
-        alert("Please click 2 or more points in scene to define the duplication path.");
+        setStatus("Select a part and click at least two path points before duplicating.", "warn");
         return;
       }
 
@@ -911,7 +1092,7 @@
             w: selectedPart.userData.dimensions.w,
             h: selectedPart.userData.dimensions.h,
             d: selectedPart.userData.dimensions.d,
-            species: "PLYWOOD",
+            species: speciesKeyFromName(selectedPart.userData.species),
             desc: selectedPart.userData.description
           };
 
@@ -923,15 +1104,24 @@
       saveState();
 
       togglePathMode();
+      setStatus(`Duplicated ${selectedPart.userData.name} along the path.`, "success");
     }
 
     // --- EDITING & WORKSPACE ---
     function applyResize() {
-      if (!selectedPart) return;
+      if (!selectedPart) {
+        setStatus("Select a wood part before resizing.", "warn");
+        return;
+      }
 
       const w = parseFloat(document.getElementById('dim-w').value);
       const h = parseFloat(document.getElementById('dim-h').value);
       const d = parseFloat(document.getElementById('dim-d').value);
+
+      if (![w, h, d].every(Number.isFinite) || w <= 0 || h <= 0 || d <= 0) {
+        setStatus("Enter positive width, height, and depth values before resizing.", "warn");
+        return;
+      }
 
       selectedPart.userData.dimensions = { w, h, d };
 
@@ -942,12 +1132,18 @@
       if (selectionBoxHelper) {
         selectionBoxHelper.update();
       }
+      updateSelectionSummary();
       saveState();
+      setStatus(`Resized ${selectedPart.userData.name} to ${formatDims(selectedPart.userData.dimensions)}.`, "success");
     }
 
     function deleteSelected() {
-      if (!selectedPart) return;
+      if (!selectedPart) {
+        setStatus("Select a part before deleting.", "warn");
+        return;
+      }
 
+      const deletedName = selectedPart.userData.name;
       transformControls.detach();
       removeHighlight();
 
@@ -955,7 +1151,9 @@
       woodParts = woodParts.filter(p => p !== selectedPart);
       selectedPart = null;
       tooltip.style.display = "none";
+      updateSelectionSummary();
       saveState();
+      setStatus(`Deleted ${deletedName}.`, "success");
     }
 
     function clearEntireScene() {
@@ -976,13 +1174,15 @@
       selectedPart = null;
       tooltip.style.display = "none";
       document.getElementById('clear-modal').style.display = "none";
+      updateSelectionSummary();
       saveState();
+      setStatus("Cleared the workspace. Add a preset or stock board to begin.", "success");
     }
 
     // --- EXPORT FUNCTION ---
     function exportStandaloneHTML() {
       if (woodParts.length === 0) {
-        alert("Workspace is empty! Add wood parts before exporting.");
+        setStatus("Workspace is empty. Add wood parts before exporting.", "warn");
         return;
       }
 
@@ -1145,6 +1345,7 @@
       a.download = `scout_wood_model_${Date.now()}.html`;
       a.click();
       URL.revokeObjectURL(url);
+      setStatus("Exported an interactive 3D HTML model.", "success");
     }
 
     function onWindowResize() {

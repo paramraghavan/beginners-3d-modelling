@@ -8,7 +8,8 @@ It uses **Three.js**, a standard JavaScript library for 3D graphics in the brows
 
 | File | Purpose |
 |---|---|
-| `drag_drop_wood_modeler.html` | Best starting point. A drag-and-drop 3D wood modeler with shelf, tabletop shelf, bookcase, workbench, shoe rack, cubby, table, and chair presets. |
+| `drag_drop_wood_modeler.html` | Best starting point. A browser-based 3D wood modeler with furniture presets, stock lumber, selected-part editing, cut lists, and standalone HTML export. |
+| `drag_drop_wood_modeler_user_guide.md` | Beginner handbook for using the modeler, including one from-scratch example and one garden park bench preset example. |
 | `floor_shelf_woodshop3d_example.html` | A simpler example that loads the Shelf A model directly. |
 | `woodshop3d.js` | Reusable helper library for creating boards, scenes, lights, controls, and draggable parts. |
 | `beginner_3d_modeling_wood_projects.md` | Beginner guide explaining how to model shelves, tables, and chairs with board dimensions. |
@@ -36,25 +37,19 @@ http://127.0.0.1:8766/drag_drop_wood_modeler.html
 
 5. Try the modeler:
 
-- Click `Shelf A` to load the shelf design.
-- Click `Tabletop Shelf` to load the on-table book shelf design.
-- Click `Bookcase`, `Workbench`, `Shoe Rack`, or `Storage Cubbies` for more common starter projects.
-- Click `Simple Table` to load a table.
-- Click `Simple Chair` to load a chair.
-- Drag parts from the left panel onto the grid.
-- Click a 3D part or a row in `Parts in Model` to select it.
-- Hover over a 3D part to see its ID, description, dimensions, material, and purpose.
-- Watch the `Support check` warning on selected parts. It tells you when a part likely needs cleats, a stiffener bar, or base skids.
-- Drag a selected 3D part to move it around.
-- Use `Selected Part` to resize, rotate, duplicate, or delete a part.
-- Use the small `D`, `L`, and `X` buttons in the part list to duplicate, lock/unlock, or remove a part quickly.
-- Use `Alignment` to snap parts to a grid while moving them.
-- Turn on `Auto lock after move` when you want pieces to lock as soon as you place them.
-- Type exact `X position`, `Y position`, and `Z position` values when dragging is not precise enough.
-- Click `Lock Part` after a part is aligned so it cannot be moved accidentally.
-- Click `Export Current Model HTML` to download your current model as an HTML file.
+- Choose a preset such as `Chemistry Lab floor shelf`, `Farmhouse Dining Table`, `Workbench`, `Bookshelf`, or `Garden Park Bench`.
+- Click `Spawn Selected Assembly/Stock`.
+- Click any 3D wood part to select it.
+- Hover over a part to see its description, dimensions, material, board footage, and support advice.
+- Use `Move (W)` or `Rotate (E)` to position the selected part.
+- Type exact Width, Height, and Depth values, then click `Apply New Size`.
+- Click `Duplicate Selected Part` or `Delete Selected Part` when needed.
+- Click `Lock / Flush Attach Face` to snap the selected part flush to another surface.
+- Click `Generate Parts / Cut List` to calculate part quantities and board footage.
+- Click `Export Interactive 3D Model` to download the current design as a standalone HTML file.
 - Scroll to zoom.
 - Drag empty space to rotate the camera.
+- Read `drag_drop_wood_modeler_user_guide.md` for a complete beginner walkthrough.
 
 ## Beginner Workflow
 
@@ -70,54 +65,51 @@ http://127.0.0.1:8766/drag_drop_wood_modeler.html
 
 | Preset | What It Shows |
 |---|---|
-| `Shelf A` | Floor shelf with plywood body, divider, shelves, cleats, back panel, and base skids. |
-| `Tabletop Shelf` | 89 in wide shelf that sits on top of a table, with left and right ladder-style book stacks and an open middle bay. |
-| `Bookcase` | Tall bookcase with shelves, shelf cleats, shelf stiffener lips, back panel, and base skids. |
-| `Workbench` | Workbench with top, 2x4 legs, aprons, lower shelf, cleats, and top stiffeners. |
-| `Shoe Rack` | Low shoe rack with shelves, cleats, front stiffeners, and base skids. |
-| `Storage Cubbies` | Two-by-two cubby unit with back panel, base skids, and shelf stiffeners. |
-| `Simple Table` | Tabletop, legs, aprons, side braces, and top stiffeners. |
-| `Simple Chair` | Seat, legs, back posts, back rest, and lower stretchers. |
-
-The `Tabletop Shelf` sample is based on the sketch dimensions: 89 in overall width, 23 in depth, about 38 in height, left and right stack bays, open center, and a rear brace tying the ladder frames together.
+| `Chemistry Lab floor shelf` | Wide floor shelf with plywood panels, dividers, shelves, cleats, back panel, stiffener lip, and base skids. |
+| `Farmhouse Dining Table` | Tabletop, four legs, front/back aprons, and side aprons. |
+| `Adirondack Chair` | Seat slats, fan backrest slats, arm rests, front legs, and ground runners. |
+| `Standard Dining Chair` | Seat pan, legs, rear posts, and back rail. |
+| `Heavy Duty Workbench` | Worktop, four legs, and lower shelf. |
+| `5-Tier Storage Bookshelf` | Side panels, base deck, shelves, and top panel. |
+| `Kitchen Base Cabinet` | Cabinet sides, base deck, and face frame stretcher. |
+| `Garden Park Bench` | Seat slats, backrest slats, and leg blocks. |
+| `Bedside Nightstand` | Top, lower shelf, and corner post legs. |
 
 ## Editing Parts
 
 1. Add or load a model.
-2. Select a part by clicking it in the 3D view or in `Parts in Model`.
+2. Select a part by clicking it in the 3D view.
 3. Change `Width`, `Height`, or `Depth`.
-4. Click `Apply Size`.
-5. Click `Rotate 90` to rotate the part left/right on the floor.
-6. Click `Stand/Flip 90` to rotate the part upright or flat.
-7. Click `Duplicate` to copy the selected part.
-8. Click `Delete Part` to remove the selected part.
+4. Click `Apply New Size`.
+5. Click `Move (W)` to reposition the part with the colored arrows.
+6. Click `Rotate (E)` to turn the part with the colored rings.
+7. Click `Duplicate Selected Part` to copy the selected part.
+8. Click `Delete Selected Part` to remove the selected part.
 
-The export button downloads `wood_model_export.html`. If you run the modeler from the local server, the export embeds the helper code directly. The exported file still loads Three.js from the internet.
+The export button downloads a timestamped `scout_wood_model_*.html` file. The exported file still loads Three.js from the internet.
 
 ## Aligning and Locking Parts
 
-Use this workflow when the wood is hard to line up by dragging:
+Use this workflow when parts are hard to line up:
 
-1. Turn on `Snap to grid`.
-2. Set `Grid step` to a useful woodworking value, such as `0.75`, `1`, or `4`.
-3. Turn on `Auto lock after move` if you want each dragged part to lock as soon as it is placed.
-4. Select the part you want to align.
-5. Type exact `X position`, `Y position`, and `Z position` values.
-6. Click `Apply Position`.
-7. Click `Snap Selected` if you dragged the part and want it cleaned up to the nearest grid point.
-8. Click `Lock Part` when the piece is in the right place.
-
-Locked parts stay visible but cannot be dragged. Click `Unlock Part` if you need to move the piece again.
+1. Select the part you want to align.
+2. Click `Move (W)`.
+3. Drag the colored arrow for the direction you want.
+4. Use the dimension boxes to keep the board size exact.
+5. Click `Lock / Flush Attach Face`.
+6. Click the surface of the target board where the selected part should attach.
+7. Use `Undo` if the snap is not the face you wanted.
 
 ## Snapping Braces Between Legs
 
 For table aprons, lower stretchers, and support braces:
 
-1. Load `Simple Table` or `Workbench`.
-2. Select the apron or brace, for example `A1`.
-3. Click `Lower Brace Height` to move it down to a typical lower support height.
-4. Click `Fit Between Legs` to resize and center it between the nearest opposite legs.
-5. Click `Lock Part` when it is in the right place.
+1. Load `Farmhouse Dining Table` or `Heavy Duty Workbench`.
+2. Select an apron, brace, or 2x4 board.
+3. Resize it to the span you need between the legs.
+4. Click `Move (W)` and place it between opposite legs.
+5. Click `Lock / Flush Attach Face` and snap it to a leg face if needed.
+6. Add a second matching brace by clicking `Duplicate Selected Part`.
 
 This is useful when moving a top apron down to become a lower stretcher between table legs.
 
