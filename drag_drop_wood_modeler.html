@@ -2,1370 +2,1461 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>3D Scout Wood Modeler & Cut List Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beginner Wood Project Modeler</title>
   <style>
-    * { box-sizing: border-box; touch-action: manipulation; }
+    * { box-sizing: border-box; }
     body {
-      margin: 0; overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #18181a; color: #f2f2f7; user-select: none; -webkit-user-select: none;
+      margin: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f4f1ea;
+      color: #202124;
     }
-    #canvas-container { width: 100vw; height: 100vh; }
-
-    /* Control Panel UI */
-    #ui-panel {
-      position: absolute; top: 16px; left: 16px; width: 340px;
-      background: rgba(28, 28, 30, 0.94); border: 1px solid #3a3a3c;
-      padding: 16px; border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.6);
-      max-height: calc(100vh - 32px); overflow-y: auto; backdrop-filter: blur(12px);
-      z-index: 10; transition: transform 0.3s ease, bottom 0.3s ease;
+    button, input, select {
+      font: inherit;
     }
-    .panel-header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid #3a3a3c; padding-bottom: 8px; margin-bottom: 12px;
+    button {
+      border: 0;
+      border-radius: 6px;
+      min-height: 36px;
+      padding: 8px 11px;
+      background: #2457a6;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
     }
-    h3 { margin: 0; color: #e5a93c; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
-
-    .section { margin-bottom: 12px; }
-    label { font-size: 11px; color: #a1a1a6; display: block; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .hint-card, .selection-card {
-      background: #242426; border: 1px solid #3a3a3c; border-radius: 10px;
-      padding: 10px 12px; font-size: 12px; line-height: 1.45; color: #d1d1d6;
+    button:hover { background: #1d4788; }
+    button.secondary {
+      background: #e6e1d7;
+      color: #202124;
+      border: 1px solid #cfc7b8;
     }
-    .hint-card strong, .selection-card strong { color: #f2f2f7; }
-    .hint-card { border-left: 3px solid #e5a93c; }
-    .selection-card { border-left: 3px solid #64d2ff; }
-    .selection-card.empty { border-left-color: #636366; color: #a1a1a6; }
-    .selection-title { color: #64d2ff; font-weight: 800; margin-bottom: 4px; }
-    .selection-meta { font-size: 11px; color: #a1a1a6; margin-top: 4px; }
-    .advice-list { margin: 7px 0 0 0; padding-left: 16px; color: #ffd60a; }
-    .advice-list li { margin-bottom: 3px; }
-
-    select, button, input {
-      width: 100%; min-height: 42px; padding: 8px 12px; margin-bottom: 6px; border-radius: 8px;
-      border: 1px solid #3a3a3c; background: #2c2c2e; color: #fff;
-      font-size: 13px; font-weight: 500; transition: all 0.15s ease;
+    button.secondary:hover { background: #dad2c3; }
+    button.danger { background: #b83b32; }
+    button.danger:hover { background: #992d26; }
+    button.active {
+      background: #1f7a4d;
+      color: #fff;
     }
-    select:focus, input:focus { outline: none; border-color: #0a84ff; background: #3a3a3c; }
-    button { background: #0a84ff; font-weight: 600; cursor: pointer; border: none; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    button:hover:not(:disabled) { background: #0071e3; }
-    button:active:not(:disabled) { transform: scale(0.98); }
-    button:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    button.help-btn { background: #30d158; color: #000; font-size: 12px; min-height: 32px; padding: 4px 10px; border-radius: 6px; width: auto; }
-    button.secondary { background: #3a3a3c; color: #f2f2f7; }
-    button.secondary:hover:not(:disabled) { background: #48484a; }
-    button.parts-btn { background: #e5a93c; color: #000; font-weight: 700; }
-    button.parts-btn:hover:not(:disabled) { background: #d4982b; }
-    button.export-btn { background: #64d2ff; color: #000; font-weight: 700; }
-    button.danger { background: #ff453a; }
-    button.danger:hover:not(:disabled) { background: #d73328; }
-    button.active { background: #30d158; color: #000; font-weight: 700; }
-    .row { display: flex; gap: 6px; }
-
-    /* Drawer Toggle for Mobile */
-    #drawer-toggle { display: none; }
-
-    /* Hover & Mobile Inspector Tooltip */
-    #tooltip {
-      position: absolute; display: none; pointer-events: none;
-      background: rgba(18, 18, 18, 0.95); border: 1px solid #e5a93c; padding: 10px 14px;
-      border-radius: 8px; font-size: 12px; line-height: 1.4; z-index: 1000;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    input, select {
+      width: 100%;
+      min-height: 36px;
+      padding: 7px 9px;
+      border: 1px solid #c9c1b3;
+      border-radius: 6px;
+      background: #fffdf8;
+      color: #202124;
     }
-    .tt-title { color: #e5a93c; font-weight: 700; font-size: 13px; }
-    .tt-tag { display: inline-block; background: #3a3a3c; color: #d1d1d6; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; }
-    #tt-advice { color: #ffd60a; margin-top: 4px; font-size: 11px; }
-
-    #app-status {
-      position: absolute; right: 16px; bottom: 16px; max-width: 360px;
-      background: rgba(28, 28, 30, 0.95); border: 1px solid #3a3a3c;
-      border-left: 4px solid #64d2ff; color: #f2f2f7; padding: 12px 14px;
-      border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-      font-size: 13px; line-height: 1.35; z-index: 1200; opacity: 0;
-      transform: translateY(12px); pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+    label {
+      display: block;
+      margin: 0 0 5px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #675f52;
     }
-    #app-status.visible { opacity: 1; transform: translateY(0); }
-    #app-status.success { border-left-color: #30d158; }
-    #app-status.warn { border-left-color: #ffd60a; }
-    #app-status.error { border-left-color: #ff453a; }
-
-    /* Modals */
-    .modal-overlay {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 2000;
-      display: flex; justify-content: center; align-items: center; padding: 16px;
+    .app {
+      display: grid;
+      grid-template-columns: 330px minmax(420px, 1fr) minmax(420px, 1fr);
+      height: 100vh;
     }
-    .modal-box {
-      background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 14px;
-      width: 580px; max-width: 100%; max-height: 85vh; overflow-y: auto; padding: 24px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    .panel {
+      overflow: auto;
+      border-right: 1px solid #d7cfbf;
+      background: #fffaf0;
+      padding: 16px;
     }
-    .modal-box h2, .modal-box h3 { margin-top: 0; color: #e5a93c; border-bottom: 1px solid #3a3a3c; padding-bottom: 8px; }
-    .step-item { margin-bottom: 12px; font-size: 13px; line-height: 1.5; color: #d1d1d6; }
-    .step-item strong { color: #fff; }
-    .badge { background: #2c2c2e; border: 1px solid #3a3a3c; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #64d2ff; }
-
-    /* Parts List Table */
-    .parts-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; text-align: left; }
-    .parts-table th, .parts-table td { padding: 8px 10px; border-bottom: 1px solid #3a3a3c; }
-    .parts-table th { background: #2c2c2e; color: #e5a93c; font-weight: 700; }
-    .parts-table td { color: #f2f2f7; }
-    .parts-summary { background: #2c2c2e; padding: 12px; border-radius: 8px; border: 1px solid #3a3a3c; font-size: 13px; margin-top: 12px; }
-
-    /* Mobile Adaptations */
-    @media (max-width: 768px) {
-      #ui-panel {
-        top: auto; bottom: 0; left: 0; width: 100vw;
-        max-height: 60vh; border-radius: 18px 18px 0 0; border: none;
-        border-top: 1px solid #3a3a3c; box-shadow: 0 -10px 30px rgba(0,0,0,0.7);
-        transform: translateY(calc(100% - 56px));
+    .workspace {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 12px;
+      padding: 14px;
+      overflow: hidden;
+      border-right: 1px solid #d7cfbf;
+    }
+    .preview {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      background: #171b22;
+      color: #f7f7f7;
+    }
+    .preview-header, .preview-footer {
+      padding: 12px 14px;
+      border-bottom: 1px solid #303846;
+    }
+    .axis-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #dce3ec;
+    }
+    .axis-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 7px;
+      border: 1px solid #3f4a59;
+      border-radius: 999px;
+      background: #222936;
+    }
+    .axis-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .preview-footer {
+      border-top: 1px solid #303846;
+      border-bottom: 0;
+      color: #cbd2dc;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    #three-view {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      color: #202124;
+    }
+    h2 {
+      margin: 18px 0 9px;
+      padding-top: 14px;
+      border-top: 1px solid #d7cfbf;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #5b4b34;
+    }
+    h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+    .intro {
+      margin: 0 0 12px;
+      color: #5c5549;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .guide-card {
+      margin: 12px 0 14px;
+      padding: 10px;
+      border: 1px solid #c8daf8;
+      border-radius: 8px;
+      background: #eef4ff;
+      color: #24436d;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .guide-card a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      min-height: 34px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      background: #2457a6;
+      color: white;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .guide-card a:hover { background: #1d4788; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .button-row button { flex: 1 1 110px; }
+    .part-list {
+      display: grid;
+      gap: 7px;
+    }
+    .part-item {
+      width: 100%;
+      text-align: left;
+      display: block;
+      background: #fffdf8;
+      color: #202124;
+      border: 1px solid #d7cfbf;
+      border-left: 5px solid #8c6b3f;
+      border-radius: 7px;
+      padding: 9px 10px;
+      cursor: pointer;
+    }
+    .part-item.selected {
+      border-color: #2457a6;
+      border-left-color: #2457a6;
+      background: #eef4ff;
+    }
+    .part-name {
+      display: block;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+    .part-meta {
+      display: block;
+      color: #685f50;
+      font-size: 12px;
+    }
+    .drawing-card {
+      min-height: 0;
+      display: none;
+      grid-template-rows: auto 1fr;
+      border: 1px solid #d7cfbf;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fffdf8;
+    }
+    .drawing-card.active {
+      display: grid;
+    }
+    .drawing-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #f0eadf;
+      border-bottom: 1px solid #d7cfbf;
+    }
+    .drawing-head p {
+      margin: 3px 0 0;
+      color: #675f52;
+      font-size: 12px;
+    }
+    .view-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .view-tabs button {
+      min-height: 54px;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 2px;
+      text-align: left;
+    }
+    .view-tabs span {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.86;
+    }
+    .view-help {
+      margin: 0;
+      padding: 9px 10px;
+      border: 1px solid #c8daf8;
+      border-radius: 7px;
+      background: #eef4ff;
+      color: #24436d;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .drawing-scroll {
+      min-height: 0;
+      overflow: auto;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+        #fffdf8;
+      background-size: 24px 24px;
+    }
+    canvas.view2d {
+      width: 1100px;
+      height: 720px;
+      display: block;
+      background: #fffdf8;
+      cursor: crosshair;
+    }
+    .status {
+      min-height: 36px;
+      margin: 10px 0 0;
+      padding: 9px 10px;
+      border-radius: 7px;
+      background: #eef4ff;
+      border: 1px solid #c8daf8;
+      color: #24436d;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .warning {
+      margin: 8px 0 0;
+      padding: 9px 10px;
+      border-radius: 7px;
+      background: #fff4cc;
+      border: 1px solid #ead177;
+      color: #5e4700;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .support-tools {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #d7cfbf;
+      border-radius: 8px;
+      background: #fffdf8;
+    }
+    .support-tools p {
+      margin: 0 0 8px;
+      color: #675f52;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .support-tools button {
+      justify-content: flex-start;
+      text-align: left;
+    }
+    .cut-list {
+      max-height: 220px;
+      overflow: auto;
+      margin-top: 8px;
+      border: 1px solid #d7cfbf;
+      border-radius: 7px;
+      background: #fffdf8;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 7px 8px;
+      border-bottom: 1px solid #e5ddcf;
+      text-align: left;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #f0eadf;
+      color: #5b4b34;
+    }
+    .small-note {
+      color: #675f52;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    @media (max-width: 1180px) {
+      body { overflow: auto; }
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
       }
-      #ui-panel.open { transform: translateY(0); }
-      #drawer-toggle {
-        display: block; width: 40px; height: 5px; background: #48484a;
-        border-radius: 3px; margin: 0 auto 10px auto; cursor: pointer;
-      }
-      .modal-box { padding: 16px; }
-      #app-status {
-        left: 12px; right: 12px; bottom: calc(60vh + 12px); max-width: none;
+      .panel, .workspace, .preview {
+        min-height: 600px;
+        border-right: 0;
+        border-bottom: 1px solid #d7cfbf;
       }
     }
   </style>
-
-  <!-- Three.js Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 </head>
 <body>
-
-  <div id="canvas-container"></div>
-
-  <!-- Real-Time Hover / Touch Inspector -->
-  <div id="tooltip">
-    <div class="tt-title" id="tt-name">Part Name</div>
-    <div class="tt-tag" id="tt-type">Structural Component</div>
-    <div id="tt-dims">Dimensions: -</div>
-    <div id="tt-species">Species: -</div>
-    <div id="tt-bf">Board Footage: -</div>
-    <div id="tt-advice"></div>
-    <div id="tt-desc" style="font-style:italic; color:#a1a1a6; margin-top:4px; border-top:1px solid #2c2c2e; padding-top:4px;"></div>
-  </div>
-
-  <div id="app-status" role="status" aria-live="polite"></div>
-
-  <!-- Responsive Control Sidebar -->
-  <div id="ui-panel">
-    <div id="drawer-toggle" onclick="toggleDrawer()"></div>
-    <div class="panel-header">
-      <h3>🪵 Scout Wood Modeler</h3>
-      <button class="help-btn" id="open-help-btn">? Help</button>
-    </div>
-
-    <div class="section">
-      <div class="hint-card">
-        <strong>Quick start:</strong> choose a preset, click a wood part, then use Move, Rotate, Resize, Delete, Cut List, or Export. Hover a part to see dimensions and build advice.
+  <main class="app">
+    <aside class="panel">
+      <h1>Wood Project Modeler</h1>
+      <p class="intro">Start with a model, select one part, change its dimensions, and use one-click supports for plywood. Use drawing mode only when you need a custom shape.</p>
+      <div class="guide-card">
+        Need a walkthrough? The guide shows how to customize an existing model and how to build a project from scratch.
+        <a href="./drag_drop_wood_modeler_user_guide.html" target="_blank" rel="noopener">Open User Guide</a>
       </div>
-    </div>
 
-    <!-- History Controls -->
-    <div class="section">
-      <label>1. History Actions</label>
-      <div class="row">
-        <button id="undo-btn" class="secondary" disabled>↩️ Undo</button>
-        <button id="redo-btn" class="secondary" disabled>↪️ Redo</button>
+      <h2>1. Choose Existing Model</h2>
+      <label for="model-select">Model library</label>
+      <select id="model-select"></select>
+      <div class="button-row">
+        <button id="load-model">Load model</button>
+        <button id="clear-project" class="secondary">Start blank</button>
       </div>
-    </div>
+      <div class="status">Best first try: load Storage cubbies, select Bottom panel, then click Add base skids under or Add sag bar under front.</div>
 
-    <!-- Presets -->
-    <div class="section">
-      <label>2. Presets & Models</label>
-      <select id="preset-select">
-        <optgroup label="🪑 Scout Assemblies (Click to Select Individual Parts)">
-          <option value="floor_shelf">Chemistry Lab floor shelf (92" Wide Shelf A - Skids, Divider, Shelves, Cleats, Backing)</option>
-          <option value="dining_table">Farmhouse Dining Table (Slab Top + 4x4 Corner Legs + Aprons)</option>
-          <option value="adirondack_chair">Adirondack Chair (Slatted Seat & Fan Backrest + Skids)</option>
-          <option value="wood_chair">Standard Dining Chair (Seat Pan + Corner Legs + Backrest)</option>
-          <option value="workbench">Heavy Duty Workbench (Worktop + 4x4 Legs + Bottom Deck)</option>
-          <option value="bookshelf">5-Tier Storage Bookshelf (Side Panels + Shelves + Toe Kick)</option>
-          <option value="cabinet_base">Kitchen Base Cabinet (Sides + Base Deck + Frame)</option>
-          <option value="garden_bench">Garden Park Bench (Seat & Back Slats + Leg Blocks)</option>
-          <option value="nightstand">Bedside Nightstand (Top + Deck + Corner Posts)</option>
-        </optgroup>
-        <optgroup label="🪵 Dimensional Framing Lumber">
-          <option value="2x4_board">2x4 Board (1.5" x 3.5" x 96")</option>
-          <option value="2x6_board">2x6 Board (1.5" x 5.5" x 96")</option>
-          <option value="4x4_post">4x4 Post (3.5" x 3.5" x 96")</option>
-          <option value="1x4_trim">1x4 Trim Board (0.75" x 3.5" x 72")</option>
-          <option value="1x2_cleat">1x2 Cleat Strip (0.75" x 1.5" x 48")</option>
-        </optgroup>
-        <optgroup label="📐 Sheet Goods & Panels">
-          <option value="plywood_34">3/4" Baltic Birch Plywood Sheet (4x8)</option>
-          <option value="plywood_12">1/2" Backer Plywood Sheet (4x8)</option>
-        </optgroup>
+      <h2>2. Selected Part</h2>
+      <label for="part-name">Part name</label>
+      <input id="part-name" placeholder="Select or create a part">
+      <div class="row-3">
+        <div>
+          <label for="part-l">Length</label>
+          <input id="part-l" type="number" min="0.25" step="0.25">
+        </div>
+        <div>
+          <label for="part-b">Breadth</label>
+          <input id="part-b" type="number" min="0.25" step="0.25">
+        </div>
+        <div>
+          <label for="part-h">Height</label>
+          <input id="part-h" type="number" min="0.25" step="0.25">
+        </div>
+      </div>
+      <div class="row-3">
+        <div>
+          <label for="part-x">X left</label>
+          <input id="part-x" type="number" step="0.25">
+        </div>
+        <div>
+          <label for="part-z">Z back</label>
+          <input id="part-z" type="number" step="0.25">
+        </div>
+        <div>
+          <label for="part-y">Y bottom</label>
+          <input id="part-y" type="number" step="0.25">
+        </div>
+      </div>
+      <label for="part-material">Material</label>
+      <select id="part-material">
+        <option value="plywood">Plywood</option>
+        <option value="pine">Pine / framing lumber</option>
+        <option value="oak">Oak / hardwood</option>
+        <option value="skid">Skid / base lumber</option>
       </select>
-      <button id="add-preset-btn">+ Spawn Selected Assembly/Stock</button>
-    </div>
+      <div class="button-row">
+        <button id="apply-part">Apply dimensions</button>
+        <button id="duplicate-part" class="secondary">Duplicate</button>
+        <button id="delete-part" class="danger">Delete</button>
+      </div>
+      <div id="part-advice" class="warning">Select a part to see support advice.</div>
 
-    <!-- Object Manipulation Controls -->
-    <div class="section">
-      <label>3. Move & Rotate Selected Part</label>
-      <div id="selection-summary" class="selection-card empty">No part selected yet. Click any board in the 3D view.</div>
-      <div class="row">
-        <button id="mode-translate" class="secondary">Move (W)</button>
-        <button id="mode-rotate" class="secondary">Rotate (E)</button>
+      <div class="support-tools">
+        <label>One-click supports for selected plywood</label>
+        <p>Select a plywood shelf, top, bottom, or panel. Then add common support pieces underneath without drawing them by hand.</p>
+        <div class="button-row">
+          <button id="add-cleats" class="secondary">Add cleats under</button>
+          <button id="add-sag-bar" class="secondary">Add sag bar under front</button>
+          <button id="add-skids" class="secondary">Add base skids under</button>
+        </div>
       </div>
 
-      <label style="margin-top:10px;">4. Surface Lock & Attach</label>
-      <button id="snap-btn" class="secondary">Lock / Flush Attach Face</button>
-      <button id="duplicate-btn" class="secondary">Duplicate Selected Part</button>
+      <h2>3. Parts In Project</h2>
+      <div id="part-list" class="part-list"></div>
 
-      <label style="margin-top:10px;">5. Multi-Point Array Copy</label>
-      <button id="path-mode-btn" class="secondary">Duplicate Along Path Points</button>
-      <div id="path-instructions" style="font-size:11px; color:#30d158; display:none; margin: 4px 0;">
-        Click 2 or more points in scene to draw path, then click Finish.
+      <h2>4. Output</h2>
+      <div class="button-row">
+        <button id="export-html" class="secondary">Export 3D HTML</button>
+        <button id="print-cut-list" class="secondary">Print cut list</button>
       </div>
-      <button id="finish-path-btn" style="display:none; background:#30d158; color:#000;">Finish Path & Duplicate</button>
+      <div id="cut-list" class="cut-list"></div>
+    </aside>
 
-      <label style="margin-top:10px;">6. Adjust Dimensions (Inches)</label>
-      <div class="row">
-        <input type="number" id="dim-w" placeholder="Width" step="0.25">
-        <input type="number" id="dim-h" placeholder="Height" step="0.25">
-        <input type="number" id="dim-d" placeholder="Depth" step="0.25">
-      </div>
-      <button id="apply-resize-btn" class="secondary">Apply New Size</button>
-
-      <button id="delete-btn" class="danger" style="margin-top:10px;">Delete Selected Part</button>
-    </div>
-
-    <!-- Cut List & Workspace Actions -->
-    <div class="section" style="border-top: 1px solid #3a3a3c; padding-top: 10px;">
-      <label>7. Cut List & Workspace Export</label>
-      <button id="open-parts-btn" class="parts-btn">📋 Generate Parts / Cut List</button>
-      <button id="export-html-btn" class="export-btn" style="margin-top:6px;">📤 Export Interactive 3D Model</button>
-      <button id="open-clear-modal-btn" class="danger" style="margin-top:6px;">🗑️ Clear Workspace</button>
-    </div>
-  </div>
-
-  <!-- Help Guide Modal -->
-  <div id="help-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-      <h2>🪵 Scout Woodworking Modeler Guide</h2>
-      <div class="step-item"><strong>📱 Mobile Touch & Desktop Navigation:</strong> Single finger / Left-click to rotate camera. Two-finger pinch / Scroll wheel to zoom. Right-click / two-finger drag to pan across workshop floor.</div>
-      <div class="step-item"><strong>🎯 Selecting Sub-Components:</strong> Tap or click directly on any piece of wood (e.g., individual skids, cleats, shelf decks, or side panels) to select it. A <span class="badge">Cyan Outline</span> highlights your active piece.</div>
-      <div class="step-item"><strong>🔄 Moving & Rotating:</strong> Use <span class="badge">W</span> or tap <strong>Move</strong> to slide parts along 3D gizmo handles. Use <span class="badge">E</span> or tap <strong>Rotate</strong> to orient boards.</div>
-      <div class="step-item"><strong>📐 Custom Resizing:</strong> Select any board, type new Width, Height, or Depth values in inches, and tap <strong>Apply New Size</strong>.</div>
-      <div class="step-item"><strong>📋 Workshop Cut List:</strong> Tap <strong>Generate Parts / Cut List</strong> anytime to calculate quantities, exact cut dimensions, material species, and total board footage for trips to the lumber yard!</div>
-      <div class="step-item"><strong>↩️ Undo & Redo:</strong> Made a mistake? Tap <strong>Undo</strong> or press <span class="badge">⌘Z</span> / <span class="badge">Ctrl+Z</span> to step backwards.</div>
-      <button id="close-help-btn" style="margin-top:16px; padding:10px; font-size:14px; font-weight:bold;">Got it! Start Designing</button>
-    </div>
-  </div>
-
-  <!-- Parts List / Cut List Modal -->
-  <div id="parts-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-box" style="width:640px;">
-      <h2>📋 Workshop Bill of Materials & Cut List</h2>
-      <p style="font-size:12px; color:#a1a1a6; margin-top:-6px;">Calculated dimensions, material grouping, and total lumber board footage.</p>
-
-      <div id="parts-table-container">
-        <!-- Dynamic Parts Table -->
+    <section class="workspace">
+      <div>
+        <h3>Draw From Scratch</h3>
+        <p class="intro">Use this only for custom projects. For most scout builds, start with a model, select plywood, and use the one-click support buttons on the left.</p>
+        <div class="button-row">
+          <button id="select-mode" class="active">Select/edit</button>
+          <button id="draw-mode" class="secondary">Draw board</button>
+        </div>
+        <div class="row">
+          <div>
+            <label for="default-b">Front view depth/thickness</label>
+            <input id="default-b" type="number" min="0.25" step="0.25" value="0.75">
+          </div>
+          <div>
+            <label for="default-l">Default length for side drawing</label>
+            <input id="default-l" type="number" min="0.25" step="0.25" value="36">
+          </div>
+        </div>
+        <div id="status" class="status">Load a model or draw a rectangle in one of the 2D views.</div>
       </div>
 
-      <div class="row" style="margin-top:16px;">
-        <button id="print-parts-btn" class="parts-btn">🖨️ Print Cut List</button>
-        <button id="close-parts-btn" class="secondary">Close</button>
+      <div class="view-tabs" role="tablist" aria-label="2D drawing views">
+        <button id="front-tab" class="active" type="button">
+          Front view
+          <span>Draw or edit Length x Height</span>
+        </button>
+        <button id="side-tab" class="secondary" type="button">
+          Side view
+          <span>Draw or edit Breadth x Height</span>
+        </button>
       </div>
-    </div>
-  </div>
 
-  <!-- Clear Confirmation Modal -->
-  <div id="clear-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-box" style="width:380px; text-align:center;">
-      <h3 style="color:#ff453a; margin-top:0; border:none; justify-content:center; font-size:16px;">⚠️ Reset Entire Workspace?</h3>
-      <p style="font-size:13px; color:#d1d1d6; margin: 12px 0 20px 0;">Are you sure you want to clear all 3D wood parts? This action cannot be undone.</p>
-      <div class="row">
-        <button id="confirm-clear-btn" class="danger">Yes, Clear Sheet</button>
-        <button id="cancel-clear-btn" class="secondary">No, Keep Parts</button>
+      <p id="view-help" class="view-help">Front view is the face of the project. It shows left-to-right Length and bottom-to-top Height. Use the scrollbars to see large projects.</p>
+
+      <div id="front-card" class="drawing-card active">
+        <div class="drawing-head">
+          <div>
+            <h3>Front 2D View</h3>
+            <p>Use this to place shelves, side panels, legs, and tops left-to-right. Rectangle width becomes Length. Rectangle height becomes Height.</p>
+          </div>
+          <span class="small-note">Length x Height</span>
+        </div>
+        <div class="drawing-scroll">
+          <canvas id="front-canvas" class="view2d"></canvas>
+        </div>
       </div>
-    </div>
-  </div>
+
+      <div id="side-card" class="drawing-card">
+        <div class="drawing-head">
+          <div>
+            <h3>Side 2D View</h3>
+            <p>Use this to set project depth. Rectangle width becomes Breadth. Rectangle height becomes Height.</p>
+          </div>
+          <span class="small-note">Breadth x Height</span>
+        </div>
+        <div class="drawing-scroll">
+          <canvas id="side-canvas" class="view2d"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="preview-header">
+        <h3>Live 3D Preview</h3>
+        <div class="axis-legend" aria-label="3D axis legend">
+          <span class="axis-chip"><span class="axis-dot" style="background:#ff5a5a;"></span>X Length</span>
+          <span class="axis-chip"><span class="axis-dot" style="background:#50d27d;"></span>Y Height</span>
+          <span class="axis-chip"><span class="axis-dot" style="background:#64a8ff;"></span>Z Breadth</span>
+          <span class="axis-chip"><span class="axis-dot" style="background:#ffd166;"></span>Floor / Top</span>
+        </div>
+      </div>
+      <div id="three-view"></div>
+      <div class="preview-footer">
+        3D grounding: red X is left/right length, green Y is height, blue Z is front/back breadth. The tan floor is ground; faint planes mark side/back walls and a ceiling/project-top guide.
+      </div>
+    </section>
+  </main>
 
   <script>
-    // --- WOOD SPECIES & MATERIALS ---
-    const SPECIES = {
-      PINE: { name: "Douglas Fir / Pine", color: 0xc19a6b },
-      OAK: { name: "White Oak", color: 0xa38258 },
-      WALNUT: { name: "American Walnut", color: 0x5c4033 },
-      MAPLE: { name: "Hard Maple", color: 0xfaedcd },
-      PLYWOOD: { name: "Baltic Birch Plywood", color: 0xd4a373 },
-      SKID: { name: "Elevated Skid Lumber", color: 0xbc6c25 }
+    const materials = {
+      plywood: { label: "Plywood", color: 0xd5aa72 },
+      pine: { label: "Pine", color: 0xc88b45 },
+      oak: { label: "Oak", color: 0x9f7347 },
+      skid: { label: "Skid lumber", color: 0x8f5424 }
     };
 
-    const PRESETS = {
-      "2x4_board": { name: "2x4 Board", w: 1.5, h: 3.5, d: 96, species: "PINE", desc: "Standard framing stud" },
-      "2x6_board": { name: "2x6 Board", w: 1.5, h: 5.5, d: 96, species: "PINE", desc: "Heavy joist & support beam" },
-      "4x4_post": { name: "4x4 Structural Post", w: 3.5, h: 3.5, d: 96, species: "PINE", desc: "Solid framing post" },
-      "1x4_trim": { name: "1x4 Trim Board", w: 0.75, h: 3.5, d: 72, species: "OAK", desc: "Hardwood trim stock" },
-      "1x2_cleat": { name: "1x2 Support Cleat Strip", w: 0.75, h: 1.5, d: 48, species: "MAPLE", desc: "Support runner batten" },
-      "plywood_34": { name: '3/4" Plywood Sheet', w: 48, h: 0.75, d: 96, species: "PLYWOOD", desc: "Cabinet grade panel sheet" },
-      "plywood_12": { name: '1/2" Plywood Sheet', w: 48, h: 0.50, d: 96, species: "PLYWOOD", desc: "Drawer & cabinet backer" }
+    // Preset dimensions use the same contract as user-created parts:
+    // l = Length/X, b = Breadth/Z, h = Height/Y, and x/z/y are the lower-left-back corner.
+    const models = {
+      tabletopShelf: {
+        name: "Tabletop shelf with open center",
+        parts: [
+          part("Top panel", 89, 23, 0.75, 0, 0, 37.25, "plywood"),
+          part("Bottom panel", 89, 23, 0.75, 0, 0, 0, "plywood"),
+          part("Left outer side", 0.75, 23, 37.25, 0, 0, 0.75, "plywood"),
+          part("Left inner divider", 0.75, 23, 37.25, 23, 0, 0.75, "plywood"),
+          part("Right inner divider", 0.75, 23, 37.25, 66, 0, 0.75, "plywood"),
+          part("Right outer side", 0.75, 23, 37.25, 88.25, 0, 0.75, "plywood"),
+          part("Left shelf low", 23, 23, 0.75, 0, 0, 13, "plywood"),
+          part("Left shelf high", 23, 23, 0.75, 0, 0, 25, "plywood"),
+          part("Right shelf low", 23, 23, 0.75, 66, 0, 13, "plywood"),
+          part("Right shelf high", 23, 23, 0.75, 66, 0, 25, "plywood"),
+          part("Back brace", 89, 1, 4, 0, 22, 16, "pine")
+        ]
+      },
+      gardenBench: {
+        name: "Garden park bench",
+        parts: [
+          part("Front seat slat", 48, 3.5, 1.5, 0, 0, 18, "oak"),
+          part("Middle seat slat", 48, 3.5, 1.5, 0, 5, 18, "oak"),
+          part("Rear seat slat", 48, 3.5, 1.5, 0, 10, 18, "oak"),
+          part("Lower back slat", 48, 3.5, 1.5, 0, 15, 26, "oak"),
+          part("Upper back slat", 48, 3.5, 1.5, 0, 15, 32, "oak"),
+          part("Left leg block", 3.5, 14, 17.25, 3, 0, 0, "pine"),
+          part("Right leg block", 3.5, 14, 17.25, 41.5, 0, 0, "pine"),
+          part("Under-seat stretcher", 42, 1.5, 3.5, 3, 5, 14, "pine")
+        ]
+      },
+      simpleTable: {
+        name: "Simple table",
+        parts: [
+          part("Table top", 48, 24, 1.5, 0, 0, 30, "plywood"),
+          part("Front left leg", 3.5, 3.5, 30, 3, 3, 0, "pine"),
+          part("Front right leg", 3.5, 3.5, 30, 41.5, 3, 0, "pine"),
+          part("Back left leg", 3.5, 3.5, 30, 3, 17.5, 0, "pine"),
+          part("Back right leg", 3.5, 3.5, 30, 41.5, 17.5, 0, "pine"),
+          part("Front apron", 41.5, 1.5, 3.5, 3.25, 2, 26, "pine"),
+          part("Back apron", 41.5, 1.5, 3.5, 3.25, 20.5, 26, "pine"),
+          part("Left side apron", 1.5, 18, 3.5, 4, 3, 26, "pine"),
+          part("Right side apron", 1.5, 18, 3.5, 42.5, 3, 26, "pine")
+        ]
+      },
+      workbench: {
+        name: "Workbench",
+        parts: [
+          part("Work top", 60, 30, 2, 0, 0, 34, "plywood"),
+          part("Lower shelf", 52, 24, 0.75, 4, 3, 8, "plywood"),
+          part("Front left leg", 3.5, 3.5, 34, 4, 4, 0, "pine"),
+          part("Front right leg", 3.5, 3.5, 34, 52.5, 4, 0, "pine"),
+          part("Back left leg", 3.5, 3.5, 34, 4, 22.5, 0, "pine"),
+          part("Back right leg", 3.5, 3.5, 34, 52.5, 22.5, 0, "pine"),
+          part("Front long stretcher", 52, 1.5, 3.5, 4, 3, 28, "pine"),
+          part("Back long stretcher", 52, 1.5, 3.5, 4, 25.5, 28, "pine")
+        ]
+      },
+      bookcase: {
+        name: "Bookcase",
+        parts: [
+          part("Left side", 0.75, 12, 72, 0, 0, 0, "plywood"),
+          part("Right side", 0.75, 12, 72, 35.25, 0, 0, "plywood"),
+          part("Bottom shelf", 35.25, 12, 0.75, 0, 0, 0, "plywood"),
+          part("Shelf 2", 35.25, 12, 0.75, 0, 0, 18, "plywood"),
+          part("Shelf 3", 35.25, 12, 0.75, 0, 0, 36, "plywood"),
+          part("Shelf 4", 35.25, 12, 0.75, 0, 0, 54, "plywood"),
+          part("Top shelf", 35.25, 12, 0.75, 0, 0, 71.25, "plywood"),
+          part("Back panel", 36, 0.5, 72, 0, 12, 0, "plywood")
+        ]
+      },
+      shoeRack: {
+        name: "Shoe rack",
+        parts: [
+          part("Left side panel", 0.75, 14, 22.5, 0, 0, 2.25, "plywood"),
+          part("Right side panel", 0.75, 14, 22.5, 35.25, 0, 2.25, "plywood"),
+          part("Bottom shelf", 36, 14, 0.75, 0, 0, 1.5, "plywood"),
+          part("Middle shelf", 36, 14, 0.75, 0, 0, 13, "plywood"),
+          part("Top shelf", 36, 14, 0.75, 0, 0, 23.25, "plywood"),
+          part("Front sag bar bottom", 36, 0.75, 1.5, 0, 0, 2.25, "pine"),
+          part("Front sag bar middle", 36, 0.75, 1.5, 0, 0, 11.5, "pine"),
+          part("Base skid left", 3.5, 14, 1.5, 2, 0, 0, "skid"),
+          part("Base skid right", 3.5, 14, 1.5, 30.5, 0, 0, "skid")
+        ]
+      },
+      storageCubbies: {
+        name: "Storage cubbies",
+        parts: [
+          part("Left side", 0.75, 15, 33, 0, 0, 2.25, "plywood"),
+          part("Right side", 0.75, 15, 33, 47.25, 0, 2.25, "plywood"),
+          part("Bottom panel", 48, 15, 0.75, 0, 0, 1.5, "plywood"),
+          part("Top panel", 48, 15, 0.75, 0, 0, 35.25, "plywood"),
+          part("Center vertical divider", 0.75, 15, 33, 23.625, 0, 2.25, "plywood"),
+          part("Middle horizontal shelf", 48, 15, 0.75, 0, 0, 18, "plywood"),
+          part("Back panel", 48, 0.5, 33.75, 0, 15, 2.25, "plywood"),
+          part("Base skid left", 3.5, 15, 1.5, 3, 0, 0, "skid"),
+          part("Base skid right", 3.5, 15, 1.5, 41.5, 0, 0, "skid")
+        ]
+      },
+      raisedPlanter: {
+        name: "Raised planter box",
+        parts: [
+          part("Front long wall", 48, 0.75, 11.25, 0, 0, 20, "pine"),
+          part("Back long wall", 48, 0.75, 11.25, 0, 17.25, 20, "pine"),
+          part("Left end wall", 0.75, 18, 11.25, 0, 0, 20, "pine"),
+          part("Right end wall", 0.75, 18, 11.25, 47.25, 0, 20, "pine"),
+          part("Bottom slat 1", 48, 3.5, 0.75, 0, 2, 18, "pine"),
+          part("Bottom slat 2", 48, 3.5, 0.75, 0, 7.25, 18, "pine"),
+          part("Bottom slat 3", 48, 3.5, 0.75, 0, 12.5, 18, "pine"),
+          part("Front left leg", 3.5, 3.5, 30, 2, 2, 0, "pine"),
+          part("Front right leg", 3.5, 3.5, 30, 42.5, 2, 0, "pine"),
+          part("Back left leg", 3.5, 3.5, 30, 2, 12.5, 0, "pine"),
+          part("Back right leg", 3.5, 3.5, 30, 42.5, 12.5, 0, "pine")
+        ]
+      },
+      picnicTable: {
+        name: "Picnic table",
+        parts: [
+          part("Table top slat 1", 60, 5.5, 1.5, 0, 16, 30, "pine"),
+          part("Table top slat 2", 60, 5.5, 1.5, 0, 23, 30, "pine"),
+          part("Table top slat 3", 60, 5.5, 1.5, 0, 30, 30, "pine"),
+          part("Left bench seat", 60, 9, 1.5, 0, 0, 18, "pine"),
+          part("Right bench seat", 60, 9, 1.5, 0, 46, 18, "pine"),
+          part("Front left leg", 3.5, 3.5, 30, 8, 14, 0, "pine"),
+          part("Front right leg", 3.5, 3.5, 30, 48, 14, 0, "pine"),
+          part("Back left leg", 3.5, 3.5, 30, 8, 38, 0, "pine"),
+          part("Back right leg", 3.5, 3.5, 30, 48, 38, 0, "pine"),
+          part("Table cross support", 52, 3.5, 1.5, 4, 25, 27, "pine"),
+          part("Bench cross support left", 52, 3.5, 1.5, 4, 3, 15, "pine"),
+          part("Bench cross support right", 52, 3.5, 1.5, 4, 46, 15, "pine")
+        ]
+      },
+      stepStool: {
+        name: "Step stool",
+        parts: [
+          part("Top step", 18, 12, 0.75, 0, 0, 18, "plywood"),
+          part("Lower step", 16, 10, 0.75, 1, 0, 9, "plywood"),
+          part("Left side support", 0.75, 12, 18, 0, 0, 0, "plywood"),
+          part("Right side support", 0.75, 12, 18, 17.25, 0, 0, "plywood"),
+          part("Back brace", 18, 0.75, 3.5, 0, 11.25, 10, "pine"),
+          part("Front kick brace", 18, 0.75, 3.5, 0, 0, 3, "pine")
+        ]
+      },
+      birdhouse: {
+        name: "Birdhouse",
+        parts: [
+          part("Floor panel", 8, 8, 0.75, 0, 0, 0, "plywood"),
+          part("Left wall", 0.75, 8, 8, 0, 0, 0.75, "plywood"),
+          part("Right wall", 0.75, 8, 8, 7.25, 0, 0.75, "plywood"),
+          part("Back wall", 8, 0.75, 8, 0, 7.25, 0.75, "plywood"),
+          part("Front wall", 8, 0.75, 8, 0, 0, 0.75, "plywood"),
+          part("Left roof panel", 9, 5, 0.75, -0.5, 0, 9, "plywood"),
+          part("Right roof panel", 9, 5, 0.75, -0.5, 4, 9, "plywood"),
+          part("Perch dowel", 0.75, 3, 0.75, 3.625, -3, 4, "pine")
+        ]
+      },
+      toolCaddy: {
+        name: "Tool caddy",
+        parts: [
+          part("Bottom tray", 24, 10, 0.75, 0, 0, 0, "plywood"),
+          part("Left end", 0.75, 10, 14, 0, 0, 0.75, "plywood"),
+          part("Right end", 0.75, 10, 14, 23.25, 0, 0.75, "plywood"),
+          part("Front rail", 24, 0.75, 4, 0, 0, 3, "pine"),
+          part("Back rail", 24, 0.75, 4, 0, 9.25, 3, "pine"),
+          part("Handle", 20, 1.5, 1.5, 2, 4.25, 12, "pine")
+        ]
+      },
+      toyChest: {
+        name: "Toy chest / blanket box",
+        parts: [
+          part("Bottom panel", 36, 18, 0.75, 0, 0, 1.5, "plywood"),
+          part("Front panel", 36, 0.75, 18, 0, 0, 2.25, "plywood"),
+          part("Back panel", 36, 0.75, 18, 0, 17.25, 2.25, "plywood"),
+          part("Left side panel", 0.75, 18, 18, 0, 0, 2.25, "plywood"),
+          part("Right side panel", 0.75, 18, 18, 35.25, 0, 2.25, "plywood"),
+          part("Lid panel", 37, 19, 0.75, -0.5, -0.5, 20.5, "plywood"),
+          part("Front lower rail", 36, 0.75, 1.5, 0, 0, 1.5, "pine"),
+          part("Back lower rail", 36, 0.75, 1.5, 0, 17.25, 1.5, "pine"),
+          part("Base skid left", 3.5, 18, 1.5, 2, 0, 0, "skid"),
+          part("Base skid right", 3.5, 18, 1.5, 30.5, 0, 0, "skid")
+        ]
+      }
     };
 
-    // --- GLOBAL VARIABLES ---
-    let scene, camera, renderer, orbitControls, transformControls;
-    let raycaster, mouse;
-    let woodParts = [];
-    let selectedPart = null;
-    let selectionBoxHelper = null;
-    let pathPoints = [];
-    let pathMarkerDots = [];
-    let isPathMode = false;
-    let isSnapMode = false;
+    let parts = [];
+    let selectedId = null;
+    let mode = "select";
+    let active2DView = "front";
+    let drawState = null;
+    let scene, camera, renderer, controls, raycaster;
+    let referenceGroup = null;
+    const meshes = new Map();
 
-    // History
-    let undoStack = [];
-    let redoStack = [];
-    let isBatchAction = false;
+    const el = id => document.getElementById(id);
+    const modelSelect = el("model-select");
+    const frontCanvas = el("front-canvas");
+    const sideCanvas = el("side-canvas");
+    const frontCtx = frontCanvas.getContext("2d");
+    const sideCtx = sideCanvas.getContext("2d");
 
-    const container = document.getElementById('canvas-container');
-    const tooltip = document.getElementById('tooltip');
-    const appStatus = document.getElementById('app-status');
-    const selectionSummary = document.getElementById('selection-summary');
-    let statusTimer = null;
-
-    function formatDims(dims) {
-      return `${dims.w}" W x ${dims.h}" H x ${dims.d}" D`;
+    function part(name, l, b, h, x, z, y, material = "pine") {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        name, l, b, h, x, z, y, material
+      };
     }
 
-    function speciesKeyFromName(speciesName) {
-      for (let k in SPECIES) {
-        if (SPECIES[k].name === speciesName) return k;
-      }
-      return "PINE";
-    }
-
-    function setStatus(message, type = "info") {
-      clearTimeout(statusTimer);
-      appStatus.className = "";
-      appStatus.classList.add("visible");
-      if (type !== "info") appStatus.classList.add(type);
-      appStatus.textContent = message;
-      statusTimer = setTimeout(() => appStatus.classList.remove("visible"), 4200);
-    }
-
-    function getSupportAdvice(group) {
-      if (!group || !group.userData || !group.userData.dimensions) return [];
-      const ud = group.userData;
-      const dims = ud.dimensions;
-      const nameDesc = `${ud.name || ""} ${ud.description || ""}`.toLowerCase();
-      const advice = [];
-      const isLongFlatSpan = dims.h <= 1.5 && Math.max(dims.w, dims.d) >= 36;
-      const spanNameTerms = ["shelf", "deck", "panel", "slat", "plank", "top", "seat", "worktop", "tabletop"];
-      const bottomTerms = ["base", "bottom", "skid", "floor", "toe kick"];
-      const isNearFloor = group.position.y - (dims.h / 2) <= 2.5;
-
-      if (isLongFlatSpan && spanNameTerms.some(term => nameDesc.includes(term))) {
-        advice.push("Long flat span: add cleats or a front stiffener to reduce sag.");
-      }
-      if ((nameDesc.includes("leg") || nameDesc.includes("post")) && dims.h >= 24) {
-        advice.push("Tall support: brace opposite legs with aprons or stretchers.");
-      }
-      if ((isNearFloor || bottomTerms.some(term => nameDesc.includes(term))) && dims.h <= 3 && Math.max(dims.w, dims.d) >= 30) {
-        advice.push("Low base part: use skids or feet if it will sit on a floor.");
-      }
-      if ((nameDesc.includes("backrest") || nameDesc.includes("side panel") || nameDesc.includes("divider")) && dims.h >= 18 && dims.h > Math.max(dims.w, dims.d)) {
-        advice.push("Vertical panel: add rear bracing or a back panel for racking resistance.");
-      }
-
-      return advice.slice(0, 2);
-    }
-
-    function determinePartType(preset) {
-      const nameDesc = `${preset.name || ""} ${preset.desc || ""}`.toLowerCase();
-      if (nameDesc.includes("leg") || nameDesc.includes("post")) return "Vertical Support";
-      if (nameDesc.includes("cleat") || nameDesc.includes("stiffener") || nameDesc.includes("apron") || nameDesc.includes("brace") || nameDesc.includes("rail") || nameDesc.includes("stretcher")) return "Support / Brace";
-      if (nameDesc.includes("slat") || nameDesc.includes("plank")) return "Slat / Board";
-      if (preset.w > 20 || preset.d > 20) return "Sheet / Panel";
-      return "Dimensional Lumber";
-    }
-
-    function updateSelectionSummary() {
-      if (!selectedPart) {
-        selectionSummary.className = "selection-card empty";
-        selectionSummary.innerHTML = "No part selected yet. Click any board in the 3D view.";
-        document.getElementById('delete-btn').disabled = true;
-        document.getElementById('apply-resize-btn').disabled = true;
-        document.getElementById('duplicate-btn').disabled = true;
-        return;
-      }
-
-      const ud = selectedPart.userData;
-      const dims = ud.dimensions;
-      const boardFeet = ((dims.w * dims.h * dims.d) / 144).toFixed(2);
-      const advice = getSupportAdvice(selectedPart);
-      const adviceHtml = advice.length
-        ? `<ul class="advice-list">${advice.map(item => `<li>${item}</li>`).join("")}</ul>`
-        : `<div class="selection-meta">No extra bracing warning for this part.</div>`;
-
-      selectionSummary.className = "selection-card";
-      selectionSummary.innerHTML = `
-        <div class="selection-title">${ud.name}</div>
-        <div><strong>Size:</strong> ${formatDims(dims)}</div>
-        <div><strong>Material:</strong> ${ud.species}</div>
-        <div class="selection-meta">${ud.type} | ${boardFeet} board feet</div>
-        ${adviceHtml}
-      `;
-      document.getElementById('delete-btn').disabled = false;
-      document.getElementById('apply-resize-btn').disabled = false;
-      document.getElementById('duplicate-btn').disabled = false;
+    function clonePart(p) {
+      return { ...p, id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()) };
     }
 
     function init() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x18181a);
-
-      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-      camera.position.set(100, 70, 120);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      container.appendChild(renderer.domElement);
-
-      orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
-      orbitControls.target.set(0, 12, 0);
-      orbitControls.enableDamping = true;
-      orbitControls.dampingFactor = 0.05;
-
-      transformControls = new THREE.TransformControls(camera, renderer.domElement);
-      transformControls.addEventListener('dragging-changed', (e) => {
-        orbitControls.enabled = !e.value;
-        if (!e.value) {
-          saveState();
-          updateSelectionSummary();
-          if (selectedPart) setStatus(`Moved ${selectedPart.userData.name}. Use the dimension boxes for exact sizing.`, "success");
-        }
-      });
-      scene.add(transformControls);
-
-      // Lighting
-      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-      dirLight.position.set(90, 130, 90);
-      dirLight.castShadow = true;
-      scene.add(dirLight);
-
-      // Floor Grid
-      const grid = new THREE.GridHelper(200, 50, 0x3a3a3c, 0x2c2c2e);
-      scene.add(grid);
-
-      raycaster = new THREE.Raycaster();
-      mouse = new THREE.Vector2();
-
-      // Listeners
-      window.addEventListener('resize', onWindowResize);
-      renderer.domElement.addEventListener('pointermove', onPointerMove);
-      renderer.domElement.addEventListener('pointerdown', onPointerDown);
-
-      window.addEventListener('keydown', (e) => {
-        const isCmdOrCtrl = e.metaKey || e.ctrlKey;
-        if (isCmdOrCtrl && e.key.toLowerCase() === 'z') {
-          if (e.shiftKey) redo();
-          else undo();
-          e.preventDefault();
-        } else if (isCmdOrCtrl && e.key.toLowerCase() === 'y') {
-          redo();
-          e.preventDefault();
-        } else if (e.key === "w" || e.key === "W") {
-          transformControls.setMode("translate");
-          setStatus("Move mode is active. Drag the colored arrows to place the selected part.");
-        } else if (e.key === "e" || e.key === "E") {
-          transformControls.setMode("rotate");
-          setStatus("Rotate mode is active. Drag the colored rings to turn the selected part.");
-        } else if (e.key === "Delete" || e.key === "Backspace") {
-          deleteSelected();
-        }
+      Object.entries(models).forEach(([key, model]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = model.name;
+        modelSelect.appendChild(option);
       });
 
-      // UI Actions
-      document.getElementById('undo-btn').addEventListener('click', undo);
-      document.getElementById('redo-btn').addEventListener('click', redo);
-      document.getElementById('add-preset-btn').addEventListener('click', spawnSelectedPreset);
-      document.getElementById('delete-btn').addEventListener('click', deleteSelected);
-      document.getElementById('apply-resize-btn').addEventListener('click', applyResize);
-      document.getElementById('snap-btn').addEventListener('click', toggleSnapMode);
-      document.getElementById('duplicate-btn').addEventListener('click', duplicateSelectedPart);
-      document.getElementById('path-mode-btn').addEventListener('click', togglePathMode);
-      document.getElementById('finish-path-btn').addEventListener('click', executePathDuplication);
-
-      document.getElementById('mode-translate').addEventListener('click', () => {
-        transformControls.setMode("translate");
-        setStatus("Move mode is active. Drag the colored arrows to position the part.");
-      });
-      document.getElementById('mode-rotate').addEventListener('click', () => {
-        transformControls.setMode("rotate");
-        setStatus("Rotate mode is active. Drag the colored rings to turn the part.");
-      });
-
-      document.getElementById('open-help-btn').addEventListener('click', () => document.getElementById('help-modal').style.display = "flex");
-      document.getElementById('close-help-btn').addEventListener('click', () => document.getElementById('help-modal').style.display = "none");
-
-      document.getElementById('open-parts-btn').addEventListener('click', generatePartsList);
-      document.getElementById('close-parts-btn').addEventListener('click', () => document.getElementById('parts-modal').style.display = "none");
-      document.getElementById('print-parts-btn').addEventListener('click', printPartsList);
-
-      document.getElementById('open-clear-modal-btn').addEventListener('click', () => document.getElementById('clear-modal').style.display = "flex");
-      document.getElementById('cancel-clear-btn').addEventListener('click', () => document.getElementById('clear-modal').style.display = "none");
-      document.getElementById('confirm-clear-btn').addEventListener('click', clearEntireScene);
-
-      document.getElementById('export-html-btn').addEventListener('click', exportStandaloneHTML);
-
-      // Default Spawn: Chemistry Lab floor shelf A
-      spawnFurnitureAssembly("floor_shelf");
-      updateSelectionSummary();
-      setStatus("Loaded the floor shelf starter model. Click any board to edit it.", "success");
-
+      init3D();
+      bindEvents();
+      loadModel("tabletopShelf");
+      resizeCanvases();
+      setStatus("Loaded a simple tabletop shelf. Select a part and change Length, Breadth, or Height.");
       animate();
     }
 
-    // --- DRAWER TOGGLE (FOR MOBILE) ---
-    function toggleDrawer() {
-      const panel = document.getElementById('ui-panel');
-      panel.classList.toggle('open');
-    }
-
-    // --- UNDO / REDO ---
-    function captureStateSnapshot() {
-      return woodParts.map(group => {
-        return {
-          name: group.userData.name,
-          dimensions: { ...group.userData.dimensions },
-          speciesName: group.userData.species,
-          type: group.userData.type,
-          description: group.userData.description,
-          pos: { x: group.position.x, y: group.position.y, z: group.position.z },
-          quat: { x: group.quaternion.x, y: group.quaternion.y, z: group.quaternion.z, w: group.quaternion.w }
-        };
+    function bindEvents() {
+      window.addEventListener("resize", () => {
+        resizeCanvases();
+        resize3D();
+        renderAll();
       });
+      el("load-model").addEventListener("click", () => loadModel(modelSelect.value));
+      el("clear-project").addEventListener("click", clearProject);
+      el("apply-part").addEventListener("click", applySelectedPart);
+      el("duplicate-part").addEventListener("click", duplicateSelected);
+      el("delete-part").addEventListener("click", deleteSelected);
+      el("add-cleats").addEventListener("click", addCleatsUnderSelected);
+      el("add-sag-bar").addEventListener("click", addSagBarUnderSelected);
+      el("add-skids").addEventListener("click", addSkidsUnderSelected);
+      el("export-html").addEventListener("click", exportHTML);
+      el("print-cut-list").addEventListener("click", () => window.print());
+      el("select-mode").addEventListener("click", () => setMode("select"));
+      el("draw-mode").addEventListener("click", () => setMode("draw"));
+      el("front-tab").addEventListener("click", () => setActive2DView("front"));
+      el("side-tab").addEventListener("click", () => setActive2DView("side"));
+
+      ["mousedown", "mousemove", "mouseup", "mouseleave"].forEach(eventName => {
+        frontCanvas.addEventListener(eventName, event => handleCanvasEvent(eventName, event, "front"));
+        sideCanvas.addEventListener(eventName, event => handleCanvasEvent(eventName, event, "side"));
+      });
+
+      el("three-view").addEventListener("pointerdown", selectFrom3D);
     }
 
-    function saveState() {
-      if (isBatchAction) return;
-      const snapshot = captureStateSnapshot();
-      undoStack.push(JSON.stringify(snapshot));
-      if (undoStack.length > 40) undoStack.shift();
-      redoStack = [];
-      updateUndoRedoUI();
+    function setMode(nextMode) {
+      mode = nextMode;
+      el("select-mode").className = mode === "select" ? "active" : "secondary";
+      el("draw-mode").className = mode === "draw" ? "active" : "secondary";
+      setStatus(mode === "draw" ? "Draw mode: drag a rectangle in front or side view." : "Select mode: click a 2D rectangle or 3D board.");
     }
 
-    function updateUndoRedoUI() {
-      document.getElementById('undo-btn').disabled = undoStack.length <= 1;
-      document.getElementById('redo-btn').disabled = redoStack.length === 0;
+    function setActive2DView(view) {
+      active2DView = view;
+      el("front-card").classList.toggle("active", view === "front");
+      el("side-card").classList.toggle("active", view === "side");
+      el("front-tab").className = view === "front" ? "active" : "secondary";
+      el("side-tab").className = view === "side" ? "active" : "secondary";
+      el("view-help").textContent = view === "front"
+        ? "Front view is the face of the project. It shows left-to-right Length and bottom-to-top Height. Use the scrollbars to see large projects."
+        : "Side view is the depth of the project. It shows front-to-back Breadth and bottom-to-top Height. Use this when a shelf or table is too deep or too shallow.";
+      resizeCanvases();
+      render2DViews();
+      setStatus(view === "front" ? "Front view active: draw or select parts by Length x Height." : "Side view active: draw or select parts by Breadth x Height.");
     }
 
-    function undo() {
-      if (undoStack.length <= 1) return;
-      const currentState = undoStack.pop();
-      redoStack.push(currentState);
-      const previousState = undoStack[undoStack.length - 1];
-      applyStateSnapshot(JSON.parse(previousState));
-      updateUndoRedoUI();
-      setStatus("Undid the last workspace change.");
+    function loadModel(key) {
+      parts = models[key].parts.map(clonePart);
+      selectedId = parts[0]?.id || null;
+      syncForm();
+      renderAll();
+      setStatus(`Loaded ${models[key].name}. Pick any part and edit L, B, H.`);
     }
 
-    function redo() {
-      if (redoStack.length === 0) return;
-      const nextState = redoStack.pop();
-      undoStack.push(nextState);
-      applyStateSnapshot(JSON.parse(nextState));
-      updateUndoRedoUI();
-      setStatus("Redid the workspace change.");
+    function clearProject() {
+      parts = [];
+      selectedId = null;
+      syncForm();
+      renderAll();
+      setStatus("Blank project ready. Click Draw board, then drag in front or side view.");
     }
 
-    function removeHighlight() {
-      if (selectionBoxHelper) {
-        scene.remove(selectionBoxHelper);
-        selectionBoxHelper.geometry.dispose();
-        selectionBoxHelper = null;
+    function selectedPart() {
+      return parts.find(p => p.id === selectedId) || null;
+    }
+
+    function selectPart(id) {
+      selectedId = id;
+      syncForm();
+      renderAll();
+      const p = selectedPart();
+      if (p) setStatus(`Selected ${p.name}. Change Length, Breadth, and Height on the left.`);
+    }
+
+    function syncForm() {
+      const p = selectedPart();
+      const disabled = !p;
+      ["part-name", "part-l", "part-b", "part-h", "part-x", "part-z", "part-y", "part-material"].forEach(id => {
+        el(id).disabled = disabled;
+      });
+      el("apply-part").disabled = disabled;
+      el("duplicate-part").disabled = disabled;
+      el("delete-part").disabled = disabled;
+      const supportDisabled = disabled || !canAddPlywoodSupports(p);
+      el("add-cleats").disabled = supportDisabled;
+      el("add-sag-bar").disabled = supportDisabled;
+      el("add-skids").disabled = supportDisabled;
+
+      if (!p) {
+        el("part-name").value = "";
+        el("part-l").value = "";
+        el("part-b").value = "";
+        el("part-h").value = "";
+        el("part-x").value = "";
+        el("part-z").value = "";
+        el("part-y").value = "";
+        el("part-advice").textContent = "Select a part to see support advice.";
+        return;
       }
+
+      el("part-name").value = p.name;
+      el("part-l").value = p.l;
+      el("part-b").value = p.b;
+      el("part-h").value = p.h;
+      el("part-x").value = p.x;
+      el("part-z").value = p.z;
+      el("part-y").value = p.y;
+      el("part-material").value = p.material;
+      el("part-advice").textContent = supportAdvice(p);
     }
 
-    function applyStateSnapshot(snapshotData) {
-      transformControls.detach();
-      removeHighlight();
-
-      woodParts.forEach(group => {
-        scene.remove(group);
-        group.traverse(child => {
-          if (child.geometry) child.geometry.dispose();
-          if (child.material) {
-            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-            else child.material.dispose();
-          }
-        });
-      });
-      woodParts = [];
-      selectedPart = null;
-
-      isBatchAction = true;
-      snapshotData.forEach(item => {
-        const preset = {
-          name: item.name,
-          w: item.dimensions.w,
-          h: item.dimensions.h,
-          d: item.dimensions.d,
-          species: speciesKeyFromName(item.speciesName),
-          desc: item.description
-        };
-
-        const newGroup = addWoodPartInternal(preset, new THREE.Vector3(item.pos.x, item.pos.y, item.pos.z));
-        newGroup.quaternion.set(item.quat.x, item.quat.y, item.quat.z, item.quat.w);
-      });
-      isBatchAction = false;
-      tooltip.style.display = "none";
-      updateSelectionSummary();
-    }
-
-    // --- INDIVIDUAL PART SPAWNER ---
-    function addWoodPartInternal(preset, customPosition = null) {
-      const group = new THREE.Group();
-
-      const geo = new THREE.BoxGeometry(preset.w, preset.h, preset.d);
-      const matKey = preset.species && SPECIES[preset.species] ? preset.species : "PINE";
-      const mat = new THREE.MeshStandardMaterial({
-        color: SPECIES[matKey].color,
-        roughness: 0.7
-      });
-
-      const mainMesh = new THREE.Mesh(geo, mat);
-      mainMesh.castShadow = true;
-      mainMesh.receiveShadow = true;
-
-      const edges = new THREE.EdgesGeometry(geo);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x5c3d2e, linewidth: 1 }));
-      mainMesh.add(line);
-
-      group.add(mainMesh);
-
-      group.userData = {
-        name: preset.name || "Wood Component",
-        dimensions: { w: preset.w, h: preset.h, d: preset.d },
-        species: SPECIES[matKey].name,
-        description: preset.desc || "",
-        type: determinePartType(preset)
+    function applySelectedPart() {
+      const p = selectedPart();
+      if (!p) return;
+      const next = {
+        name: el("part-name").value.trim() || "Wood part",
+        l: positiveNumber(el("part-l").value, p.l),
+        b: positiveNumber(el("part-b").value, p.b),
+        h: positiveNumber(el("part-h").value, p.h),
+        x: numberValue(el("part-x").value, p.x),
+        z: numberValue(el("part-z").value, p.z),
+        y: numberValue(el("part-y").value, p.y),
+        material: el("part-material").value
       };
-
-      if (customPosition) {
-        group.position.copy(customPosition);
-      } else {
-        group.position.set(0, preset.h / 2 + 2, 0);
-      }
-
-      scene.add(group);
-      woodParts.push(group);
-      selectPart(group);
-      return group;
+      Object.assign(p, next);
+      syncForm();
+      renderAll();
+      setStatus(`Updated ${p.name}: ${p.l} L x ${p.b} B x ${p.h} H.`);
     }
 
-    // --- POPULAR FURNITURE & STRUCTURE SPAWNER ---
-    function spawnFurnitureAssembly(type) {
-      isBatchAction = true;
-
-      if (type === "floor_shelf") {
-        // Chemistry Lab Storage Shelf A (92" W × 23.25" D × 25.5" H)
-        addWoodPartInternal({ name: "Base Skid Runner (Left)", w: 3.5, h: 1.5, d: 23.25, species: "SKID", desc: "2x4 Base Elevation Skid (P11)" }, new THREE.Vector3(-44.25, 0.75, 0));
-        addWoodPartInternal({ name: "Base Skid Runner (Center)", w: 3.5, h: 1.5, d: 23.25, species: "SKID", desc: "2x4 Base Elevation Skid (P11)" }, new THREE.Vector3(0, 0.75, 0));
-        addWoodPartInternal({ name: "Base Skid Runner (Right)", w: 3.5, h: 1.5, d: 23.25, species: "SKID", desc: "2x4 Base Elevation Skid (P11)" }, new THREE.Vector3(44.25, 0.75, 0));
-
-        addWoodPartInternal({ name: "Bottom Panel (P2)", w: 92, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Base Panel' }, new THREE.Vector3(0, 1.875, 0));
-
-        addWoodPartInternal({ name: "Left Side Panel (P4)", w: 0.75, h: 22.5, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Left Side Panel' }, new THREE.Vector3(-45.625, 13.5, 0));
-        addWoodPartInternal({ name: "Right Side Panel (P5)", w: 0.75, h: 22.5, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Right Side Panel' }, new THREE.Vector3(45.625, 13.5, 0));
-
-        const dividerX = -15.375;
-        addWoodPartInternal({ name: "Center Divider (P6)", w: 0.75, h: 22.5, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Interior Divider' }, new THREE.Vector3(dividerX, 13.5, 0));
-
-        addWoodPartInternal({ name: "Top Panel (P1)", w: 92, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Top Deck Surface' }, new THREE.Vector3(0, 25.125, 0));
-
-        addWoodPartInternal({ name: "Back Enclosure Panel (P3)", w: 92, h: 22.5, d: 0.75, species: "PLYWOOD", desc: '3/4" Raw Plywood Full-Width Back Panel' }, new THREE.Vector3(0, 13.5, -11.25));
-
-        const cleatYOffsets = [7.0, 12.5, 18.0];
-        const smallShelfX = -30.3125;
-        cleatYOffsets.forEach((y, i) => {
-          addWoodPartInternal({ name: `Left Support Cleat (Tier ${i+1} Left)`, w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(-44.875, y - 0.75, 1.625));
-          addWoodPartInternal({ name: `Left Support Cleat (Tier ${i+1} Right)`, w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(dividerX - 0.375, y - 0.75, 1.625));
-          addWoodPartInternal({ name: `Small Shelf Deck (Tier ${i+1} P8)`, w: 29.5, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Small Storage Shelf' }, new THREE.Vector3(smallShelfX, y + 0.375, 0));
-        });
-
-        const longCleatY = 16.0;
-        const longShelfX = 22.4375;
-        addWoodPartInternal({ name: "Right Support Cleat (Left)", w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(dividerX + 0.375, longCleatY - 0.75, 1.625));
-        addWoodPartInternal({ name: "Right Support Cleat (Right)", w: 0.75, h: 1.5, d: 20, species: "MAPLE", desc: "1x2 Solid Pine Cleat (P10)" }, new THREE.Vector3(44.875, longCleatY - 0.75, 1.625));
-
-        addWoodPartInternal({ name: "Long Shelf Deck (P7)", w: 60.25, h: 0.75, d: 23.25, species: "PLYWOOD", desc: '3/4" Raw Plywood Wide Storage Shelf' }, new THREE.Vector3(longShelfX, longCleatY + 0.375, 0));
-        addWoodPartInternal({ name: "Stiffener Front Lip (P9)", w: 60.25, h: 1.5, d: 0.75, species: "MAPLE", desc: "1x2 Solid Pine Front Anti-Sag Lip" }, new THREE.Vector3(longShelfX, longCleatY - 0.375, 10.875));
-
-      } else if (type === "dining_table") {
-        addWoodPartInternal({ name: "Table Top Slab", w: 36, h: 1.5, d: 72, species: "WALNUT", desc: "Solid hardwood table slab" }, new THREE.Vector3(0, 30, 0));
-        addWoodPartInternal({ name: "Corner Leg (FL)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(-15, 14.25, -33));
-        addWoodPartInternal({ name: "Corner Leg (FR)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(15, 14.25, -33));
-        addWoodPartInternal({ name: "Corner Leg (BL)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(-15, 14.25, 33));
-        addWoodPartInternal({ name: "Corner Leg (BR)", w: 3.5, h: 28.5, d: 3.5, species: "WALNUT", desc: "Heavy corner leg" }, new THREE.Vector3(15, 14.25, 33));
-        addWoodPartInternal({ name: "Apron Rail (Front)", w: 30, h: 3.5, d: 0.75, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(0, 27.5, -33));
-        addWoodPartInternal({ name: "Apron Rail (Back)", w: 30, h: 3.5, d: 0.75, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(0, 27.5, 33));
-        addWoodPartInternal({ name: "Apron Rail (Side L)", w: 0.75, h: 3.5, d: 66, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(-15, 27.5, 0));
-        addWoodPartInternal({ name: "Apron Rail (Side R)", w: 0.75, h: 3.5, d: 66, species: "WALNUT", desc: "Structural apron rail" }, new THREE.Vector3(15, 27.5, 0));
-
-      } else if (type === "adirondack_chair") {
-        addWoodPartInternal({ name: "Base Leg Skid (L)", w: 1.5, h: 3.5, d: 32, species: "PINE", desc: "Ground runner skid" }, new THREE.Vector3(-11, 6, 0));
-        addWoodPartInternal({ name: "Base Leg Skid (R)", w: 1.5, h: 3.5, d: 32, species: "PINE", desc: "Ground runner skid" }, new THREE.Vector3(11, 6, 0));
-        addWoodPartInternal({ name: "Front Leg (L)", w: 1.5, h: 20, d: 3.5, species: "PINE", desc: "Front leg post" }, new THREE.Vector3(-11, 10, -12));
-        addWoodPartInternal({ name: "Front Leg (R)", w: 1.5, h: 20, d: 3.5, species: "PINE", desc: "Front leg post" }, new THREE.Vector3(11, 10, -12));
-        addWoodPartInternal({ name: "Wide Armrest (L)", w: 5.5, h: 0.75, d: 30, species: "PINE", desc: "Flat wide armrest" }, new THREE.Vector3(-12, 20, 0));
-        addWoodPartInternal({ name: "Wide Armrest (R)", w: 5.5, h: 0.75, d: 30, species: "PINE", desc: "Flat wide armrest" }, new THREE.Vector3(12, 20, 0));
-        for (let i = 0; i < 5; i++) {
-          addWoodPartInternal({ name: `Seat Slat #${i+1}`, w: 20, h: 0.75, d: 3.5, species: "PINE", desc: "Seat slat" }, new THREE.Vector3(0, 11 - (i * 0.8), -12 + (i * 4)));
-        }
-        for (let i = 0; i < 5; i++) {
-          addWoodPartInternal({ name: `Backrest Slat #${i+1}`, w: 3.5, h: 28, d: 0.75, species: "PINE", desc: "Fan backrest slat" }, new THREE.Vector3(-7 + (i * 3.5), 26, 12 + (i * 0.2)));
-        }
-
-      } else if (type === "wood_chair") {
-        addWoodPartInternal({ name: "Chair Seat Pan Deck", w: 18, h: 1.0, d: 18, species: "OAK", desc: "Solid hardwood seat pan" }, new THREE.Vector3(0, 18, 0));
-        addWoodPartInternal({ name: "Front Leg (L)", w: 1.5, h: 17.5, d: 1.5, species: "OAK", desc: "Front leg post" }, new THREE.Vector3(-7.5, 8.75, -7.5));
-        addWoodPartInternal({ name: "Front Leg (R)", w: 1.5, h: 17.5, d: 1.5, species: "OAK", desc: "Front leg post" }, new THREE.Vector3(7.5, 8.75, -7.5));
-        addWoodPartInternal({ name: "Rear Back Post (L)", w: 1.5, h: 36, d: 1.5, species: "OAK", desc: "Rear corner post" }, new THREE.Vector3(-7.5, 18, 7.5));
-        addWoodPartInternal({ name: "Rear Back Post (R)", w: 1.5, h: 36, d: 1.5, species: "OAK", desc: "Rear corner post" }, new THREE.Vector3(7.5, 18, 7.5));
-        addWoodPartInternal({ name: "Backrest Top Rail", w: 15, h: 4.0, d: 0.75, species: "OAK", desc: "Upper backrest lumbar support" }, new THREE.Vector3(0, 33, 7.5));
-
-      } else if (type === "workbench") {
-        addWoodPartInternal({ name: "Worktop Slab", w: 30, h: 2.0, d: 60, species: "MAPLE", desc: "Laminated hardwood workbench surface" }, new THREE.Vector3(0, 34, 0));
-        addWoodPartInternal({ name: "Corner Leg (FL)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(-12, 16, -26));
-        addWoodPartInternal({ name: "Corner Leg (FR)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(12, 16, -26));
-        addWoodPartInternal({ name: "Corner Leg (BL)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(-12, 16, 26));
-        addWoodPartInternal({ name: "Corner Leg (BR)", w: 3.5, h: 32, d: 3.5, species: "PINE", desc: "Heavy 4x4 leg" }, new THREE.Vector3(12, 16, 26));
-        addWoodPartInternal({ name: "Bottom Shelf Deck", w: 24, h: 0.75, d: 52, species: "PLYWOOD", desc: "Lower tool storage deck" }, new THREE.Vector3(0, 8, 0));
-
-      } else if (type === "bookshelf") {
-        addWoodPartInternal({ name: "Side Panel (L)", w: 0.75, h: 72, d: 12, species: "PLYWOOD", desc: "Carcass side panel" }, new THREE.Vector3(-18, 36, 0));
-        addWoodPartInternal({ name: "Side Panel (R)", w: 0.75, h: 72, d: 12, species: "PLYWOOD", desc: "Carcass side panel" }, new THREE.Vector3(18, 36, 0));
-        addWoodPartInternal({ name: "Base Deck", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Bottom base deck" }, new THREE.Vector3(0, 3, 0));
-        addWoodPartInternal({ name: "Shelf Deck (Tier 2)", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Storage shelf" }, new THREE.Vector3(0, 20, 0));
-        addWoodPartInternal({ name: "Shelf Deck (Tier 3)", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Storage shelf" }, new THREE.Vector3(0, 38, 0));
-        addWoodPartInternal({ name: "Shelf Deck (Tier 4)", w: 35.25, h: 0.75, d: 12, species: "PLYWOOD", desc: "Storage shelf" }, new THREE.Vector3(0, 56, 0));
-        addWoodPartInternal({ name: "Top Cover", w: 36, h: 0.75, d: 12, species: "PLYWOOD", desc: "Top carcass cover" }, new THREE.Vector3(0, 71.625, 0));
-
-      } else if (type === "cabinet_base") {
-        addWoodPartInternal({ name: "Cabinet Side (L)", w: 0.75, h: 34.5, d: 24, species: "PLYWOOD", desc: "Cabinet side" }, new THREE.Vector3(-12, 17.25, 0));
-        addWoodPartInternal({ name: "Cabinet Side (R)", w: 0.75, h: 34.5, d: 24, species: "PLYWOOD", desc: "Cabinet side" }, new THREE.Vector3(12, 17.25, 0));
-        addWoodPartInternal({ name: "Base Deck Shelf", w: 23.25, h: 0.75, d: 24, species: "PLYWOOD", desc: "Bottom deck" }, new THREE.Vector3(0, 3, 0));
-        addWoodPartInternal({ name: "Face Frame Stretcher", w: 23.25, h: 1.5, d: 0.75, species: "OAK", desc: "Upper stretcher" }, new THREE.Vector3(0, 33.75, 11.625));
-
-      } else if (type === "garden_bench") {
-        addWoodPartInternal({ name: "Seat Slat (Front)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor bench plank" }, new THREE.Vector3(0, 18, -5));
-        addWoodPartInternal({ name: "Seat Slat (Middle)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor bench plank" }, new THREE.Vector3(0, 18, 0));
-        addWoodPartInternal({ name: "Seat Slat (Rear)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor bench plank" }, new THREE.Vector3(0, 18, 5));
-        addWoodPartInternal({ name: "Backrest Slat (Lower)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor backrest plank" }, new THREE.Vector3(0, 26, 7.5));
-        addWoodPartInternal({ name: "Backrest Slat (Upper)", w: 48, h: 1.5, d: 3.5, species: "OAK", desc: "Outdoor backrest plank" }, new THREE.Vector3(0, 31, 7.5));
-        addWoodPartInternal({ name: "Leg Block (L)", w: 3.5, h: 17.25, d: 14, species: "PINE", desc: "Leg support block" }, new THREE.Vector3(-20, 8.625, 0));
-        addWoodPartInternal({ name: "Leg Block (R)", w: 3.5, h: 17.25, d: 14, species: "PINE", desc: "Leg support block" }, new THREE.Vector3(20, 8.625, 0));
-
-      } else if (type === "nightstand") {
-        addWoodPartInternal({ name: "Nightstand Top Deck", w: 20, h: 0.75, d: 18, species: "OAK", desc: "Top surface" }, new THREE.Vector3(0, 26, 0));
-        addWoodPartInternal({ name: "Bottom Shelf Deck", w: 18.5, h: 0.75, d: 16.5, species: "OAK", desc: "Lower open deck" }, new THREE.Vector3(0, 6, 0));
-        addWoodPartInternal({ name: "Corner Post Leg (FL)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(-8.5, 12.625, -7.5));
-        addWoodPartInternal({ name: "Corner Post Leg (FR)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(8.5, 12.625, -7.5));
-        addWoodPartInternal({ name: "Corner Post Leg (BL)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(-8.5, 12.625, 7.5));
-        addWoodPartInternal({ name: "Corner Post Leg (BR)", w: 1.5, h: 25.25, d: 1.5, species: "OAK", desc: "Corner leg post" }, new THREE.Vector3(8.5, 12.625, 7.5));
-      }
-
-      isBatchAction = false;
-      saveState();
-    }
-
-    function spawnSelectedPreset() {
-      const val = document.getElementById('preset-select').value;
-      if (PRESETS[val]) {
-        addWoodPartInternal(PRESETS[val]);
-        saveState();
-        setStatus(`Added ${PRESETS[val].name}. It is selected and ready to move or resize.`, "success");
-      } else {
-        spawnFurnitureAssembly(val);
-        setStatus(`Loaded ${document.getElementById('preset-select').selectedOptions[0].text}. Click any part to edit it.`, "success");
-      }
-      updateSelectionSummary();
-    }
-
-    // --- PARTS LIST & CUT LIST GENERATOR ---
-    function generatePartsList() {
-      if (woodParts.length === 0) {
-        setStatus("Workspace is empty. Add wood parts before generating a cut list.", "warn");
-        return;
-      }
-
-      const summaryMap = {};
-      let grandTotalBF = 0;
-
-      woodParts.forEach(group => {
-        const ud = group.userData;
-        const d = ud.dimensions;
-        const bf = (d.w * d.h * d.d) / 144;
-        grandTotalBF += bf;
-
-        // Group key based on name, dimensions, and material
-        const key = `${ud.name}|${d.w}|${d.h}|${d.d}|${ud.species}`;
-        if (!summaryMap[key]) {
-          summaryMap[key] = {
-            name: ud.name,
-            w: d.w,
-            h: d.h,
-            d: d.d,
-            species: ud.species,
-            desc: ud.description,
-            qty: 0,
-            unitBF: bf
-          };
-        }
-        summaryMap[key].qty += 1;
-      });
-
-      let html = `<table class="parts-table">
-        <thead>
-          <tr>
-            <th>Part Name</th>
-            <th>Qty</th>
-            <th>Dimensions (Thick × Width × Length)</th>
-            <th>Material</th>
-            <th>Board Feet</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-      for (let k in summaryMap) {
-        const item = summaryMap[k];
-        const totalItemBF = (item.unitBF * item.qty).toFixed(2);
-        html += `<tr>
-          <td><strong>${item.name}</strong><br><span style="font-size:10px; color:#a1a1a6;">${item.desc}</span></td>
-          <td><span class="badge" style="font-size:12px;">${item.qty}x</span></td>
-          <td>${item.h}" × ${item.w}" × ${item.d}"</td>
-          <td>${item.species}</td>
-          <td>${totalItemBF} BF</td>
-        </tr>`;
-      }
-
-      html += `</tbody></table>`;
-      html += `<div class="parts-summary">
-        <strong>📦 Summary & Stock Requirement:</strong><br>
-        Total Parts Count: <strong>${woodParts.length} Components</strong><br>
-        Total Board Footage: <strong style="color:#30d158;">${grandTotalBF.toFixed(2)} Board Feet (BF)</strong>
-      </div>`;
-
-      document.getElementById('parts-table-container').innerHTML = html;
-      document.getElementById('parts-modal').style.display = "flex";
-      setStatus(`Generated a cut list for ${woodParts.length} parts.`, "success");
-    }
-
-    function printPartsList() {
-      const content = document.getElementById('parts-table-container').innerHTML;
-      const printWin = window.open('', '', 'width=800,height=600');
-      printWin.document.write(`<html><head><title>Scout Woodworking Cut List</title>
-        <style>
-          body { font-family: sans-serif; padding: 20px; color: #000; }
-          table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 12px; }
-          th { background: #f2f2f2; }
-          .badge { font-weight: bold; }
-          .parts-summary { margin-top: 20px; padding: 12px; background: #f9f9f9; border: 1px solid #ddd; }
-        </style>
-      </head><body>
-        <h2>🪵 Scout Workshop Cut List & Bill of Materials</h2>
-        ${content}
-      </body></html>`);
-      printWin.document.close();
-      printWin.focus();
-      printWin.print();
-    }
-
-    // --- HOVER / TOUCH INSPECTOR ---
-    function onPointerMove(event) {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      if (intersects.length > 0) {
-        let hitObj = intersects[0].object;
-        let rootGroup = hitObj;
-        while (rootGroup && rootGroup.parent && rootGroup.parent !== scene) {
-          rootGroup = rootGroup.parent;
-        }
-
-        if (rootGroup && woodParts.includes(rootGroup)) {
-          tooltip.style.display = "block";
-          tooltip.style.left = Math.min(event.clientX + 16, window.innerWidth - 220) + "px";
-          tooltip.style.top = Math.min(event.clientY + 16, window.innerHeight - 150) + "px";
-
-          const ud = rootGroup.userData;
-          const dims = ud.dimensions;
-          const boardFeet = ((dims.w * dims.h * dims.d) / 144).toFixed(2);
-
-          document.getElementById('tt-name').innerText = ud.name;
-          document.getElementById('tt-type').innerText = ud.type;
-          document.getElementById('tt-dims').innerText = `Dimensions: ${dims.w}" W × ${dims.h}" H × ${dims.d}" D`;
-          document.getElementById('tt-species').innerText = `Species: ${ud.species}`;
-          document.getElementById('tt-bf').innerText = `Board Feet: ${boardFeet} BF`;
-          const advice = getSupportAdvice(rootGroup);
-          document.getElementById('tt-advice').innerText = advice.length ? `Build note: ${advice[0]}` : "";
-          document.getElementById('tt-desc').innerText = ud.description || "";
-          return;
-        }
-      }
-      tooltip.style.display = "none";
-    }
-
-    // --- SELECTION & INTERACTION ---
-    function onPointerDown(event) {
-      if (transformControls.dragging) return;
-
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      if (intersects.length > 0) {
-        let hitObj = intersects[0].object;
-        let rootGroup = hitObj;
-        while (rootGroup && rootGroup.parent && rootGroup.parent !== scene) {
-          rootGroup = rootGroup.parent;
-        }
-
-        if (isPathMode) {
-          pathPoints.push(intersects[0].point.clone());
-          const dot = new THREE.Mesh(new THREE.SphereGeometry(0.8), new THREE.MeshBasicMaterial({ color: 0x30d158 }));
-          dot.position.copy(intersects[0].point);
-          scene.add(dot);
-          pathMarkerDots.push(dot);
-          return;
-        }
-
-        if (isSnapMode && selectedPart) {
-          if (rootGroup && rootGroup !== selectedPart) {
-            snapPartToFace(selectedPart, intersects[0].object, intersects[0].face, intersects[0].point);
-            toggleSnapMode();
-            saveState();
-            return;
-          }
-        }
-
-        if (rootGroup && woodParts.includes(rootGroup)) {
-          selectPart(rootGroup);
-        }
-      }
-    }
-
-    function selectPart(group) {
-      removeHighlight();
-
-      selectedPart = group;
-      transformControls.attach(selectedPart);
-
-      // Cyan Bounding Box Outline
-      selectionBoxHelper = new THREE.BoxHelper(selectedPart, 0x64d2ff);
-      selectionBoxHelper.material.linewidth = 2;
-      scene.add(selectionBoxHelper);
-
-      const dims = selectedPart.userData.dimensions;
-      document.getElementById('dim-w').value = dims.w;
-      document.getElementById('dim-h').value = dims.h;
-      document.getElementById('dim-d').value = dims.d;
-      updateSelectionSummary();
-      if (!isBatchAction) {
-        setStatus(`Selected ${selectedPart.userData.name}. Use Move, Rotate, Resize, Duplicate, or Delete.`);
-      }
-    }
-
-    // --- SURFACE LOCK & PATH DUPLICATION ---
-    function toggleSnapMode() {
-      isSnapMode = !isSnapMode;
-      const btn = document.getElementById('snap-btn');
-      btn.className = isSnapMode ? "active" : "secondary";
-      btn.innerText = isSnapMode ? "Click Target Surface..." : "Lock / Flush Attach Face";
-      setStatus(isSnapMode ? "Snap mode on. Click the surface where this part should attach flush." : "Snap mode off.");
-    }
-
-    function snapPartToFace(sourceGroup, targetMesh, hitFace, hitPoint) {
-      if (!hitFace) return;
-      const normalMatrix = new THREE.Matrix3().getNormalMatrix(targetMesh.matrixWorld);
-      const worldNormal = hitFace.normal.clone().applyMatrix3(normalMatrix).normalize();
-
-      const bbox = new THREE.Box3().setFromObject(sourceGroup);
-      const size = new THREE.Vector3();
-      bbox.getSize(size);
-
-      const offset = worldNormal.clone().multiplyScalar(size.y / 2);
-      sourceGroup.position.copy(hitPoint).add(offset);
-      sourceGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), worldNormal);
-      updateSelectionSummary();
-      setStatus(`Snapped ${sourceGroup.userData.name} flush to the target face.`, "success");
-    }
-
-    function duplicateSelectedPart() {
-      if (!selectedPart) {
-        setStatus("Select a part before duplicating.", "warn");
-        return;
-      }
-
-      const sourceName = selectedPart.userData.name;
-      const dims = selectedPart.userData.dimensions;
-      const copyPreset = {
-        name: `${sourceName} (Copy)`,
-        w: dims.w,
-        h: dims.h,
-        d: dims.d,
-        species: speciesKeyFromName(selectedPart.userData.species),
-        desc: selectedPart.userData.description
-      };
-
-      const offset = new THREE.Vector3(Math.max(4, dims.w + 2), 0, Math.max(4, Math.min(8, dims.d / 4)));
-      const newGroup = addWoodPartInternal(copyPreset, selectedPart.position.clone().add(offset));
-      newGroup.quaternion.copy(selectedPart.quaternion);
-      saveState();
-      setStatus(`Duplicated ${sourceName}. The copy is selected and slightly offset.`, "success");
-    }
-
-    function togglePathMode() {
-      isPathMode = !isPathMode;
-      pathPoints = [];
-      pathMarkerDots.forEach(d => scene.remove(d));
-      pathMarkerDots = [];
-
-      const btn = document.getElementById('path-mode-btn');
-      const instructions = document.getElementById('path-instructions');
-      const finishBtn = document.getElementById('finish-path-btn');
-
-      if (isPathMode) {
-        btn.className = "active";
-        btn.innerText = "Cancel Path Mode";
-        instructions.style.display = "block";
-        finishBtn.style.display = "block";
-        setStatus("Path copy mode on. Click two or more points, then Finish Path & Duplicate.");
-      } else {
-        btn.className = "secondary";
-        btn.innerText = "Duplicate Along Path Points";
-        instructions.style.display = "none";
-        finishBtn.style.display = "none";
-        setStatus("Path copy mode off.");
-      }
-    }
-
-    function executePathDuplication() {
-      if (!selectedPart || pathPoints.length < 2) {
-        setStatus("Select a part and click at least two path points before duplicating.", "warn");
-        return;
-      }
-
-      isBatchAction = true;
-      for (let i = 0; i < pathPoints.length - 1; i++) {
-        const pStart = pathPoints[i];
-        const pEnd = pathPoints[i + 1];
-
-        const distance = pStart.distanceTo(pEnd);
-        const dir = new THREE.Vector3().subVectors(pEnd, pStart).normalize();
-
-        const copySpacing = Math.max(12, selectedPart.userData.dimensions.d + 2);
-        const copies = Math.max(1, Math.floor(distance / copySpacing));
-        const step = distance / (copies + 1);
-
-        for (let j = 1; j <= copies; j++) {
-          const spawnPos = pStart.clone().add(dir.clone().multiplyScalar(step * j));
-
-          const clonedPreset = {
-            name: selectedPart.userData.name + " (Copy)",
-            w: selectedPart.userData.dimensions.w,
-            h: selectedPart.userData.dimensions.h,
-            d: selectedPart.userData.dimensions.d,
-            species: speciesKeyFromName(selectedPart.userData.species),
-            desc: selectedPart.userData.description
-          };
-
-          const newGroup = addWoodPartInternal(clonedPreset, spawnPos);
-          newGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
-        }
-      }
-      isBatchAction = false;
-      saveState();
-
-      togglePathMode();
-      setStatus(`Duplicated ${selectedPart.userData.name} along the path.`, "success");
-    }
-
-    // --- EDITING & WORKSPACE ---
-    function applyResize() {
-      if (!selectedPart) {
-        setStatus("Select a wood part before resizing.", "warn");
-        return;
-      }
-
-      const w = parseFloat(document.getElementById('dim-w').value);
-      const h = parseFloat(document.getElementById('dim-h').value);
-      const d = parseFloat(document.getElementById('dim-d').value);
-
-      if (![w, h, d].every(Number.isFinite) || w <= 0 || h <= 0 || d <= 0) {
-        setStatus("Enter positive width, height, and depth values before resizing.", "warn");
-        return;
-      }
-
-      selectedPart.userData.dimensions = { w, h, d };
-
-      const mainMesh = selectedPart.children[0];
-      mainMesh.geometry.dispose();
-      mainMesh.geometry = new THREE.BoxGeometry(w, h, d);
-
-      if (selectionBoxHelper) {
-        selectionBoxHelper.update();
-      }
-      updateSelectionSummary();
-      saveState();
-      setStatus(`Resized ${selectedPart.userData.name} to ${formatDims(selectedPart.userData.dimensions)}.`, "success");
+    function duplicateSelected() {
+      const p = selectedPart();
+      if (!p) return;
+      const copy = clonePart({ ...p, name: `${p.name} copy`, x: p.x + Math.max(2, p.l * 0.08), z: p.z + Math.max(2, p.b * 0.2) });
+      parts.push(copy);
+      selectedId = copy.id;
+      syncForm();
+      renderAll();
+      setStatus(`Duplicated ${p.name}. Move or resize the copy.`);
     }
 
     function deleteSelected() {
-      if (!selectedPart) {
-        setStatus("Select a part before deleting.", "warn");
+      const p = selectedPart();
+      if (!p) return;
+      parts = parts.filter(item => item.id !== p.id);
+      selectedId = parts[0]?.id || null;
+      syncForm();
+      renderAll();
+      setStatus(`Deleted ${p.name}.`);
+    }
+
+    function addCleatsUnderSelected() {
+      const panel = selectedPart();
+      if (!panel || !canAddPlywoodSupports(panel)) {
+        setStatus("Select a plywood shelf or panel before adding cleats.");
+        return;
+      }
+      // Cleats are narrow front-to-back runners placed just below the selected plywood panel.
+      const y = Math.max(0, panel.y - 1.5);
+      const z = panel.z + 0.5;
+      const cleatBreadth = Math.max(4, panel.b - 1);
+      const left = part(`${panel.name} left cleat`, 0.75, cleatBreadth, 1.5, panel.x + 0.5, z, y, "pine");
+      const right = part(`${panel.name} right cleat`, 0.75, cleatBreadth, 1.5, panel.x + panel.l - 1.25, z, y, "pine");
+      parts.push(left, right);
+      selectedId = right.id;
+      syncForm();
+      renderAll();
+      setStatus(`Added two cleats under ${panel.name}. They run front-to-back under the plywood edges.`);
+    }
+
+    function addSagBarUnderSelected() {
+      const panel = selectedPart();
+      if (!panel || !canAddPlywoodSupports(panel)) {
+        setStatus("Select a plywood shelf, top, or panel before adding a sag bar.");
+        return;
+      }
+      const y = panel.y <= 1.5 ? panel.y + panel.h : Math.max(0, panel.y - 1.5);
+      const bar = part(`${panel.name} front sag bar`, panel.l, 0.75, 1.5, panel.x, Math.max(0, panel.z - 0.75), y, "pine");
+      parts.push(bar);
+      selectedId = bar.id;
+      syncForm();
+      renderAll();
+      setStatus(`Added a front sag prevention bar to ${panel.name}. Bottom panels keep skids as the only floor-contact pieces.`);
+    }
+
+    function addSkidsUnderSelected() {
+      const panel = selectedPart();
+      if (!panel) {
+        setStatus("Select a plywood bottom panel before adding skids.");
         return;
       }
 
-      const deletedName = selectedPart.userData.name;
-      transformControls.detach();
-      removeHighlight();
-
-      scene.remove(selectedPart);
-      woodParts = woodParts.filter(p => p !== selectedPart);
-      selectedPart = null;
-      tooltip.style.display = "none";
-      updateSelectionSummary();
-      saveState();
-      setStatus(`Deleted ${deletedName}.`, "success");
-    }
-
-    function clearEntireScene() {
-      transformControls.detach();
-      removeHighlight();
-
-      woodParts.forEach(group => {
-        scene.remove(group);
-        group.traverse(child => {
-          if (child.geometry) child.geometry.dispose();
-          if (child.material) {
-            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-            else child.material.dispose();
-          }
-        });
-      });
-      woodParts = [];
-      selectedPart = null;
-      tooltip.style.display = "none";
-      document.getElementById('clear-modal').style.display = "none";
-      updateSelectionSummary();
-      saveState();
-      setStatus("Cleared the workspace. Add a preset or stock board to begin.", "success");
-    }
-
-    // --- EXPORT FUNCTION ---
-    function exportStandaloneHTML() {
-      if (woodParts.length === 0) {
-        setStatus("Workspace is empty. Add wood parts before exporting.", "warn");
-        return;
+      // Skids own the floor contact. Lift low plywood so the skids are visibly underneath it.
+      if (panel.y < 1.5) {
+        panel.y = 1.5;
       }
 
-      const modelData = woodParts.map(group => {
-        const mainMesh = group.children[0];
-        return {
-          name: group.userData.name || "Wood Part",
-          dimensions: group.userData.dimensions || { w: 1, h: 1, d: 1 },
-          species: group.userData.species || "Wood",
-          type: group.userData.type || "Stock",
-          description: group.userData.description || "",
-          color: mainMesh.material.color.getHex(),
-          pos: { x: group.position.x, y: group.position.y, z: group.position.z },
-          quat: { x: group.quaternion.x, y: group.quaternion.y, z: group.quaternion.z, w: group.quaternion.w }
-        };
-      });
-
-      const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scout 3D Wood Model Export</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: #18181a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #f2f2f7; user-select: none; }
-    #info-card {
-      position: absolute; top: 16px; left: 16px; background: rgba(28,28,30,0.92);
-      border: 1px solid #3a3a3c; padding: 14px 18px; border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 10;
+      const skidY = Math.max(0, panel.y - 1.5);
+      const skidPositions = [panel.x + 1, panel.x + panel.l / 2 - 1.75, panel.x + panel.l - 4.5];
+      const skids = skidPositions.map((x, index) => part(`${panel.name} base skid ${index + 1}`, 3.5, panel.b, 1.5, Math.max(panel.x, x), panel.z, skidY, "skid"));
+      parts.push(...skids);
+      selectedId = skids[1].id;
+      syncForm();
+      renderAll();
+      setStatus(`Added three base skids under ${panel.name}. The plywood was lifted if needed so skids sit below it.`);
     }
-    #info-card h3 { margin: 0 0 4px 0; color: #e5a93c; font-size: 15px; }
-    #info-card p { margin: 0; font-size: 11px; color: #8e8e93; }
-    #tooltip {
-      position: absolute; display: none; pointer-events: none;
-      background: rgba(18,18,18,0.95); border: 1px solid #e5a93c; padding: 10px 14px;
-      border-radius: 8px; font-size: 12px; line-height: 1.4; z-index: 1000;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
-    }
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>
-</head>
-<body>
-  <div id="info-card">
-    <h3>🪵 Interactive Scout Wood Model</h3>
-    <p>Single Finger / Left Click: Rotate | Pinch / Scroll: Zoom</p>
-  </div>
 
-  <div id="tooltip">
-    <div id="tt-name" style="color:#e5a93c; font-weight:bold; font-size:13px;"></div>
-    <div id="tt-dims"></div>
-    <div id="tt-species" style="color:#8e8e93;"></div>
-    <div id="tt-bf" style="color:#30d158; font-weight:bold;"></div>
-  </div>
+    function handleCanvasEvent(eventName, event, view) {
+      const canvas = view === "front" ? frontCanvas : sideCanvas;
+      const point = screenToWorld(canvas, event, view);
 
-  <script>
-    const sceneData = ${JSON.stringify(modelData, null, 2)};
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x18181a);
-
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.set(100, 70, 120);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    document.body.appendChild(renderer.domElement);
-
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 12, 0);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-    dirLight.position.set(90, 130, 90);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-
-    scene.add(new THREE.GridHelper(200, 50, 0x3a3a3c, 0x2c2c2e));
-
-    const exportGroups = [];
-    sceneData.forEach(item => {
-      const group = new THREE.Group();
-      const geo = new THREE.BoxGeometry(item.dimensions.w, item.dimensions.h, item.dimensions.d);
-      const mat = new THREE.MeshStandardMaterial({ color: item.color, roughness: 0.7 });
-      const mainMesh = new THREE.Mesh(geo, mat);
-      mainMesh.castShadow = true;
-      mainMesh.receiveShadow = true;
-
-      const edges = new THREE.EdgesGeometry(geo);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x5c3d2e, linewidth: 1 }));
-      mainMesh.add(line);
-
-      group.add(mainMesh);
-
-      group.position.set(item.pos.x, item.pos.y, item.pos.z);
-      group.quaternion.set(item.quat.x, item.quat.y, item.quat.z, item.quat.w);
-      group.userData = item;
-
-      scene.add(group);
-      exportGroups.push(group);
-    });
-
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    const tooltip = document.getElementById('tooltip');
-
-    window.addEventListener('pointermove', (e) => {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(exportGroups, true);
-
-      if (intersects.length > 0) {
-        let rootGroup = intersects[0].object;
-        while (rootGroup && rootGroup.parent && rootGroup.parent !== scene) {
-          rootGroup = rootGroup.parent;
-        }
-
-        if (rootGroup && rootGroup.userData.dimensions) {
-          const ud = rootGroup.userData;
-          const d = ud.dimensions;
-          const bf = ((d.w * d.h * d.d) / 144).toFixed(2);
-
-          tooltip.style.display = "block";
-          tooltip.style.left = Math.min(e.clientX + 16, window.innerWidth - 220) + "px";
-          tooltip.style.top = Math.min(e.clientY + 16, window.innerHeight - 150) + "px";
-
-          document.getElementById('tt-name').innerText = ud.name;
-          document.getElementById('tt-dims').innerText = \`Dimensions: \${d.w}" W × \${d.h}" H × \${d.d}" D\`;
-          document.getElementById('tt-species').innerText = \`Species: \${ud.species}\`;
-          document.getElementById('tt-bf').innerText = \`Board Feet: \${bf} BF\`;
+      if (eventName === "mousedown") {
+        if (mode === "select") {
+          const hit = findPartAt(point, view);
+          if (hit) selectPart(hit.id);
           return;
         }
+        drawState = { view, start: point, current: point };
       }
-      tooltip.style.display = "none";
-    });
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      if (eventName === "mousemove" && drawState && drawState.view === view) {
+        drawState.current = point;
+        render2DViews();
+      }
+
+      if ((eventName === "mouseup" || eventName === "mouseleave") && drawState && drawState.view === view) {
+        finishDrawing(view);
+      }
+    }
+
+    function finishDrawing(view) {
+      const start = drawState.start;
+      const end = drawState.current;
+      drawState = null;
+      const minA = Math.min(start.a, end.a);
+      const maxA = Math.max(start.a, end.a);
+      const minY = Math.min(start.y, end.y);
+      const maxY = Math.max(start.y, end.y);
+      const width = roundQuarter(maxA - minA);
+      const height = roundQuarter(maxY - minY);
+      if (width < 1 || height < 1) {
+        render2DViews();
+        return;
+      }
+
+      let p;
+      if (view === "front") {
+        // Front-view drawing starts as thin plywood so it does not appear as a deep block in 3D.
+        p = part(`Drawn part ${parts.length + 1}`, width, positiveNumber(el("default-b").value, 0.75), height, roundQuarter(minA), 0, roundQuarter(minY), "plywood");
+      } else {
+        p = part(`Drawn part ${parts.length + 1}`, positiveNumber(el("default-l").value, 36), width, height, 0, roundQuarter(minA), roundQuarter(minY), "pine");
+      }
+
+      parts.push(p);
+      selectedId = p.id;
+      syncForm();
+      renderAll();
+      setStatus(view === "front"
+        ? `Created ${p.name} as a thin front-view part. Increase Breadth if this board needs more depth.`
+        : `Created ${p.name} from side view. Now assign exact Length, Breadth, and Height.`);
+    }
+
+    function findPartAt(point, view) {
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i];
+        const rect = view === "front"
+          ? { a: p.x, y: p.y, w: p.l, h: p.h }
+          : { a: p.z, y: p.y, w: p.b, h: p.h };
+        if (point.a >= rect.a && point.a <= rect.a + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h) {
+          return p;
+        }
+      }
+      return null;
+    }
+
+    function renderAll() {
+      renderPartList();
+      renderCutList();
+      render2DViews();
+      render3DParts();
+    }
+
+    function renderPartList() {
+      const list = el("part-list");
+      list.innerHTML = "";
+      if (!parts.length) {
+        list.innerHTML = `<div class="small-note">No parts yet. Draw a board or load a model.</div>`;
+        return;
+      }
+      parts.forEach(p => {
+        const item = document.createElement("button");
+        item.className = `part-item ${p.id === selectedId ? "selected" : ""}`;
+        item.innerHTML = `<span class="part-name">${escapeHTML(p.name)}</span><span class="part-meta">${p.l}" L x ${p.b}" B x ${p.h}" H | ${materials[p.material].label}</span>`;
+        item.addEventListener("click", () => selectPart(p.id));
+        list.appendChild(item);
+      });
+    }
+
+    function renderCutList() {
+      const rows = parts.map(p => `
+        <tr>
+          <td>${escapeHTML(p.name)}</td>
+          <td>${p.l}" x ${p.b}" x ${p.h}"</td>
+          <td>${materials[p.material].label}</td>
+          <td>${boardFeet(p).toFixed(2)}</td>
+        </tr>
+      `).join("");
+      el("cut-list").innerHTML = `
+        <table>
+          <thead><tr><th>Part</th><th>L x B x H</th><th>Material</th><th>BF</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="4">No parts yet.</td></tr>`}</tbody>
+        </table>
+      `;
+    }
+
+    function resizeCanvases() {
+      [frontCanvas, sideCanvas].forEach(canvas => {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(220, Math.floor(rect.height * dpr));
+      });
+    }
+
+    function render2DViews() {
+      drawView(frontCanvas, frontCtx, "front");
+      drawView(sideCanvas, sideCtx, "side");
+    }
+
+    function drawView(canvas, ctx, view) {
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const cssW = width / dpr;
+      const cssH = height / dpr;
+      const transform = viewTransform(cssW, cssH, view);
+      drawGrid(ctx, cssW, cssH, transform, view);
+
+      parts.forEach(p => {
+        const rect = view === "front"
+          ? { a: p.x, y: p.y, w: p.l, h: p.h }
+          : { a: p.z, y: p.y, w: p.b, h: p.h };
+        const p1 = worldToScreen(rect.a, rect.y, transform);
+        const p2 = worldToScreen(rect.a + rect.w, rect.y + rect.h, transform);
+        ctx.fillStyle = p.id === selectedId ? "rgba(36, 87, 166, 0.28)" : "rgba(140, 107, 63, 0.25)";
+        ctx.strokeStyle = p.id === selectedId ? "#2457a6" : "#8c6b3f";
+        ctx.lineWidth = p.id === selectedId ? 3 : 1.5;
+        ctx.fillRect(p1.x, p2.y, p2.x - p1.x, p1.y - p2.y);
+        ctx.strokeRect(p1.x, p2.y, p2.x - p1.x, p1.y - p2.y);
+        ctx.fillStyle = "#202124";
+        ctx.font = "12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.fillText(p.name, p1.x + 5, Math.max(14, p2.y + 15));
+      });
+
+      if (drawState && drawState.view === view) {
+        const p1 = worldToScreen(drawState.start.a, drawState.start.y, transform);
+        const p2 = worldToScreen(drawState.current.a, drawState.current.y, transform);
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = "#1f7a4d";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y));
+        ctx.setLineDash([]);
+      }
+
+      ctx.restore();
+    }
+
+    function drawGrid(ctx, width, height, transform, view) {
+      ctx.fillStyle = "#fffdf8";
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = "#ece4d7";
+      ctx.lineWidth = 1;
+      for (let n = 0; n <= transform.maxA; n += 6) {
+        const x = worldToScreen(n, 0, transform).x;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let n = 0; n <= transform.maxY; n += 6) {
+        const y = worldToScreen(0, n, transform).y;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "#9a8d7b";
+      ctx.lineWidth = 1.5;
+      const origin = worldToScreen(0, 0, transform);
+      ctx.beginPath();
+      ctx.moveTo(origin.x, 0);
+      ctx.lineTo(origin.x, height);
+      ctx.moveTo(0, origin.y);
+      ctx.lineTo(width, origin.y);
+      ctx.stroke();
+
+      ctx.fillStyle = "#24436d";
+      ctx.font = "700 13px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText(view === "front" ? "FRONT VIEW: Length left-to-right" : "SIDE VIEW: Breadth front-to-back", 18, 24);
+      ctx.save();
+      ctx.translate(18, height - 48);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Height bottom-to-top", 0, 0);
+      ctx.restore();
+      ctx.fillStyle = "#675f52";
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText("Scroll this paper to see the full drawing.", 18, 42);
+    }
+
+    function viewTransform(width, height, view) {
+      const maxA = Math.max(48, ...parts.map(p => view === "front" ? p.x + p.l : p.z + p.b)) + 12;
+      const maxY = Math.max(36, ...parts.map(p => p.y + p.h)) + 12;
+      const pad = 34;
+      const scale = Math.min((width - pad * 2) / maxA, (height - pad * 2) / maxY);
+      return { pad, scale, maxA, maxY, height };
+    }
+
+    function worldToScreen(a, y, transform) {
+      return {
+        x: transform.pad + a * transform.scale,
+        y: transform.height - transform.pad - y * transform.scale
+      };
+    }
+
+    function screenToWorld(canvas, event, view) {
+      const rect = canvas.getBoundingClientRect();
+      const transform = viewTransform(rect.width, rect.height, view);
+      const a = (event.clientX - rect.left - transform.pad) / transform.scale;
+      const y = (transform.height - transform.pad - (event.clientY - rect.top)) / transform.scale;
+      return { a: Math.max(0, roundQuarter(a)), y: Math.max(0, roundQuarter(y)) };
+    }
+
+    function init3D() {
+      const root = el("three-view");
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x171b22);
+      camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1200);
+      camera.position.set(90, 72, 115);
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      root.appendChild(renderer.domElement);
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.target.set(30, 18, 12);
+      raycaster = new THREE.Raycaster();
+      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+      const light = new THREE.DirectionalLight(0xffffff, 0.95);
+      light.position.set(60, 120, 80);
+      scene.add(light);
+      resize3D();
+    }
+
+    function resize3D() {
+      const root = el("three-view");
+      const rect = root.getBoundingClientRect();
+      if (!rect.width || !rect.height || !renderer) return;
+      camera.aspect = rect.width / rect.height;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+      renderer.setSize(rect.width, rect.height);
+    }
+
+    function render3DParts() {
+      meshes.forEach(mesh => {
+        scene.remove(mesh);
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+      });
+      meshes.clear();
+
+      const bounds = projectBounds();
+      render3DReference(bounds);
+      parts.forEach(p => {
+        const geo = new THREE.BoxGeometry(p.l, p.h, p.b);
+        const mat = new THREE.MeshStandardMaterial({
+          color: materials[p.material].color,
+          roughness: 0.72,
+          metalness: 0.02
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        // Three.js boxes are centered, while our editor stores part positions by lower-left-back corner.
+        mesh.position.set(p.x + p.l / 2 - bounds.centerX, p.y + p.h / 2, p.z + p.b / 2 - bounds.centerZ);
+        mesh.userData.partId = p.id;
+        scene.add(mesh);
+        meshes.set(p.id, mesh);
+
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo),
+          new THREE.LineBasicMaterial({ color: p.id === selectedId ? 0x2457a6 : 0x4d3725 })
+        );
+        edges.position.copy(mesh.position);
+        scene.add(edges);
+        meshes.set(`${p.id}-edges`, edges);
+      });
+      controls.target.set(0, Math.max(12, bounds.height / 2), 0);
+    }
+
+    function render3DReference(bounds) {
+      if (referenceGroup) {
+        scene.remove(referenceGroup);
+        referenceGroup.traverse(obj => {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(mat => mat.dispose());
+            else obj.material.dispose();
+          }
+          if (obj.material?.map) obj.material.map.dispose();
+        });
+      }
+
+      referenceGroup = new THREE.Group();
+      // Reference guides scale to the active project so users can judge floor, wall, and height clearance.
+      const floorW = Math.max(96, bounds.width + 36);
+      const floorD = Math.max(72, bounds.depth + 36);
+      const ceilingY = Math.max(48, Math.ceil((bounds.height + 6) / 12) * 12);
+
+      const floorMat = new THREE.MeshBasicMaterial({ color: 0x8f7d5c, transparent: true, opacity: 0.22, side: THREE.DoubleSide });
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(floorW, floorD), floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = 0;
+      referenceGroup.add(floor);
+
+      const grid = new THREE.GridHelper(Math.max(floorW, floorD), Math.ceil(Math.max(floorW, floorD) / 6), 0x617084, 0x303846);
+      grid.position.y = 0.02;
+      referenceGroup.add(grid);
+
+      const wallMat = new THREE.MeshBasicMaterial({ color: 0x75a8ff, transparent: true, opacity: 0.10, side: THREE.DoubleSide });
+      const backWall = new THREE.Mesh(new THREE.PlaneGeometry(floorW, ceilingY), wallMat);
+      backWall.position.set(0, ceilingY / 2, -floorD / 2);
+      referenceGroup.add(backWall);
+
+      const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(floorD, ceilingY), wallMat.clone());
+      sideWall.rotation.y = Math.PI / 2;
+      sideWall.position.set(-floorW / 2, ceilingY / 2, 0);
+      referenceGroup.add(sideWall);
+
+      const ceiling = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(floorW, 0.05, floorD)),
+        new THREE.LineBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0.7 })
+      );
+      ceiling.position.y = ceilingY;
+      referenceGroup.add(ceiling);
+
+      const axisLen = Math.max(36, Math.min(96, Math.max(bounds.width, bounds.depth, bounds.height) + 18));
+      referenceGroup.add(new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(-floorW / 2, 0.25, -floorD / 2), axisLen, 0xff5a5a, 5, 3));
+      referenceGroup.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-floorW / 2, 0.25, -floorD / 2), Math.min(axisLen, ceilingY), 0x50d27d, 5, 3));
+      referenceGroup.add(new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(-floorW / 2, 0.25, -floorD / 2), axisLen, 0x64a8ff, 5, 3));
+
+      referenceGroup.add(make3DLabel("X Length / left-right", 0xff5a5a, new THREE.Vector3(-floorW / 2 + axisLen + 4, 4, -floorD / 2)));
+      referenceGroup.add(make3DLabel("Y Height", 0x50d27d, new THREE.Vector3(-floorW / 2, Math.min(axisLen, ceilingY) + 5, -floorD / 2)));
+      referenceGroup.add(make3DLabel("Z Breadth / front-back", 0x64a8ff, new THREE.Vector3(-floorW / 2, 4, -floorD / 2 + axisLen + 4)));
+      referenceGroup.add(make3DLabel("FLOOR / GROUND y=0", 0xffd166, new THREE.Vector3(0, 1.2, floorD / 2 - 10)));
+      referenceGroup.add(make3DLabel("SIDE WALL x=0", 0xb7d0ff, new THREE.Vector3(-floorW / 2 + 1, ceilingY - 5, 0)));
+      referenceGroup.add(make3DLabel("BACK WALL z=0", 0xb7d0ff, new THREE.Vector3(0, ceilingY - 5, -floorD / 2 + 1)));
+      referenceGroup.add(make3DLabel("CEILING / PROJECT TOP GUIDE", 0xffd166, new THREE.Vector3(0, ceilingY + 3, 0)));
+
+      scene.add(referenceGroup);
+    }
+
+    function make3DLabel(text, color, position) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 96;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgba(23,27,34,0.82)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = `#${color.toString(16).padStart(6, "0")}`;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 30px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText(text, 22, 58);
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(material);
+      sprite.position.copy(position);
+      sprite.scale.set(24, 4.5, 1);
+      return sprite;
+    }
+
+    function selectFrom3D(event) {
+      if (!renderer) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects([...meshes.values()].filter(obj => obj.userData.partId));
+      if (hits[0]?.object?.userData?.partId) {
+        selectPart(hits[0].object.userData.partId);
+      }
+    }
 
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
     }
-    animate();
-  <\/script>
-</body>
-</html>`;
 
-      const blob = new Blob([htmlContent], { type: 'text/html' });
+    function projectBounds() {
+      const minX = Math.min(0, ...parts.map(p => p.x));
+      const minZ = Math.min(0, ...parts.map(p => p.z));
+      const maxX = Math.max(1, ...parts.map(p => p.x + p.l));
+      const maxZ = Math.max(1, ...parts.map(p => p.z + p.b));
+      const maxY = Math.max(1, ...parts.map(p => p.y + p.h));
+      return {
+        centerX: (minX + maxX) / 2,
+        centerZ: (minZ + maxZ) / 2,
+        width: maxX - minX,
+        depth: maxZ - minZ,
+        height: maxY
+      };
+    }
+
+    function supportAdvice(p) {
+      const advice = [];
+      const longestFlat = Math.max(p.l, p.b);
+      const name = p.name.toLowerCase();
+      if (canAddPlywoodSupports(p)) advice.push("Plywood selected: use the buttons above to add cleats, a sag bar, or skids automatically.");
+      if (p.h <= 1.5 && longestFlat >= 36) advice.push("Long thin span: click Add sag bar under front to reduce sag.");
+      if ((name.includes("leg") || name.includes("post")) && p.h >= 24) advice.push("Tall support: connect opposite legs with aprons or stretchers.");
+      if ((name.includes("bottom") || name.includes("base") || p.y <= 1) && longestFlat >= 30) advice.push("Floor contact: click Add base skids under.");
+      return advice.length ? advice.join(" ") : "No special support warning for this part.";
+    }
+
+    function canAddPlywoodSupports(p) {
+      if (!p) return false;
+      const name = p.name.toLowerCase();
+      const looksLikePanel = p.h <= 2 && Math.max(p.l, p.b) >= 12;
+      const isPanelName = ["panel", "shelf", "top", "bottom", "deck", "plywood"].some(word => name.includes(word));
+      return p.material === "plywood" && looksLikePanel && isPanelName;
+    }
+
+    function exportHTML() {
+      const data = JSON.stringify(parts, null, 2);
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Wood Model Export</title></head><body><pre>${escapeHTML(data)}</pre><p>Open this data in the modeler to rebuild the project.</p></body></html>`;
+      const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `scout_wood_model_${Date.now()}.html`;
-      a.click();
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "wood_project_model.html";
+      link.click();
       URL.revokeObjectURL(url);
-      setStatus("Exported an interactive 3D HTML model.", "success");
+      setStatus("Exported the project data as an HTML file.");
     }
 
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    function setStatus(message) {
+      el("status").textContent = message;
     }
 
-    function animate() {
-      requestAnimationFrame(animate);
-      orbitControls.update();
-
-      if (selectionBoxHelper) {
-        selectionBoxHelper.update();
-      }
-
-      renderer.render(scene, camera);
+    function positiveNumber(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed > 0 ? roundQuarter(parsed) : fallback;
     }
 
-    window.onload = init;
+    function numberValue(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? roundQuarter(parsed) : fallback;
+    }
+
+    function roundQuarter(value) {
+      return Math.round(value * 4) / 4;
+    }
+
+    function boardFeet(p) {
+      return (p.l * p.b * p.h) / 144;
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[char]);
+    }
+
+    window.addEventListener("load", init);
   </script>
 </body>
 </html>
