@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232457a6'/%3E%3Crect x='10' y='18' width='44' height='10' fill='%23f0c184'/%3E%3Crect x='12' y='28' width='40' height='4' fill='%238f5424'/%3E%3Crect x='14' y='32' width='7' height='18' fill='%23c88b45'/%3E%3Crect x='43' y='32' width='7' height='18' fill='%23c88b45'/%3E%3C/svg%3E">
   <title>Beginner Wood Project Modeler</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       overflow: hidden;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: #f4f1ea;
       color: #202124;
@@ -58,8 +62,56 @@
     .app {
       display: grid;
       grid-template-columns: 330px minmax(420px, 1fr) minmax(420px, 1fr);
-      height: 100vh;
+      min-height: 0;
     }
+    .top-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 8px 14px;
+      border-bottom: 1px solid #d7cfbf;
+      background: #fffaf0;
+      color: #3b3328;
+    }
+    .toolbar-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .toolbar-title strong {
+      white-space: nowrap;
+      font-size: 15px;
+    }
+    .toolbar-title span {
+      min-width: 0;
+      color: #675f52;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .toolbar-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 7px 11px;
+      border-radius: 6px;
+      background: #2457a6;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .toolbar-link:hover { background: #1d4788; }
     .panel {
       overflow: auto;
       border-right: 1px solid #d7cfbf;
@@ -144,30 +196,6 @@
       font-size: 13px;
       line-height: 1.4;
     }
-    .guide-card {
-      margin: 12px 0 14px;
-      padding: 10px;
-      border: 1px solid #c8daf8;
-      border-radius: 8px;
-      background: #eef4ff;
-      color: #24436d;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    .guide-card a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 8px;
-      min-height: 34px;
-      padding: 7px 10px;
-      border-radius: 6px;
-      background: #2457a6;
-      color: white;
-      font-weight: 800;
-      text-decoration: none;
-    }
-    .guide-card a:hover { background: #1d4788; }
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -357,6 +385,18 @@
     }
     @media (max-width: 1180px) {
       body { overflow: auto; }
+      .top-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .toolbar-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .toolbar-title span {
+        white-space: normal;
+      }
       .app {
         grid-template-columns: 1fr;
         height: auto;
@@ -373,14 +413,19 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
+  <header class="top-toolbar">
+    <div class="toolbar-title">
+      <strong>Wood Project Modeler</strong>
+      <span>Best path: load a preset, select one board, edit Length / Breadth / Height, then add supports if needed.</span>
+    </div>
+    <div class="toolbar-actions">
+      <a class="toolbar-link" href="./drag_drop_wood_modeler_user_guide.html" target="_blank" rel="noopener">User Guide</a>
+    </div>
+  </header>
   <main class="app">
     <aside class="panel">
       <h1>Wood Project Modeler</h1>
       <p class="intro">Start with a model, select one part, change its dimensions, and use one-click supports for plywood. Use drawing mode only when you need a custom shape.</p>
-      <div class="guide-card">
-        Need a walkthrough? The guide shows how to customize an existing model and how to build a project from scratch.
-        <a href="./drag_drop_wood_modeler_user_guide.html" target="_blank" rel="noopener">Open User Guide</a>
-      </div>
 
       <h2>1. Choose Existing Model</h2>
       <label for="model-select">Model library</label>
@@ -467,7 +512,7 @@
         </div>
         <div class="row">
           <div>
-            <label for="default-b">Front view depth/thickness</label>
+            <label for="default-b">Default Breadth for front drawing</label>
             <input id="default-b" type="number" min="0.25" step="0.25" value="0.75">
           </div>
           <div>
@@ -530,7 +575,7 @@
       </div>
       <div id="three-view"></div>
       <div class="preview-footer">
-        3D grounding: red X is left/right length, green Y is height, blue Z is front/back breadth. The tan floor is ground; faint planes mark side/back walls and a ceiling/project-top guide.
+        3D grounding: red X is left/right length, green Y is height, blue Z is front/back breadth. Drag to rotate, scroll to zoom, right-drag to pan. The tan floor is ground; faint planes mark side/back walls and a ceiling/project-top guide.
       </div>
     </section>
   </main>
@@ -1033,7 +1078,7 @@
       syncForm();
       renderAll();
       setStatus(view === "front"
-        ? `Created ${p.name} as a thin front-view part. Increase Breadth if this board needs more depth.`
+        ? `Created ${p.name} from the front view. Set Breadth to the real front-to-back depth.`
         : `Created ${p.name} from side view. Now assign exact Length, Breadth, and Height.`);
     }
 

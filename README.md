@@ -13,6 +13,9 @@ The main tool is intentionally simple:
 | File | Purpose |
 |---|---|
 | `drag_drop_wood_modeler.html` | Main beginner wood project modeler. |
+| `pwa/index.html` | Progressive Web App version of the modeler. Use this for installable app testing. |
+| `pwa/manifest.webmanifest` | PWA install metadata, app name, colors, and icons. |
+| `pwa/service-worker.js` | Offline cache for the PWA shell and guide files. |
 | `drag_drop_wood_modeler_user_guide.html` | Browser-friendly user guide linked from the modeler UI. |
 | `drag_drop_wood_modeler_user_guide.md` | Markdown source for the user guide. Keep this file for editing. |
 | `beginner_3d_modeling_wood_projects.md` | Background guide for thinking about wood parts and dimensions. |
@@ -31,6 +34,29 @@ Open:
 ```text
 http://127.0.0.1:8766/drag_drop_wood_modeler.html
 ```
+
+## Progressive Web App
+
+The installable version lives under:
+
+```text
+/Users/paramraghavan/dev/beginners-3d-modelling/pwa
+```
+
+Run the same local server:
+
+```bash
+cd /Users/paramraghavan/dev/beginners-3d-modelling
+python3 -m http.server 8766
+```
+
+Open:
+
+```text
+http://127.0.0.1:8766/pwa/
+```
+
+In Chrome or Edge, use the install icon in the address bar or the browser menu to install it as an app. The PWA caches the local app shell, manifest, icons, and user guide. The 3D library is still loaded from the CDN, so open the app once while online before relying on it offline.
 
 The tool also has an `Open User Guide` link in the left panel. It opens:
 

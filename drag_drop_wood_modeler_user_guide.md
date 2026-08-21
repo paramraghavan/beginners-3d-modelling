@@ -1,19 +1,14 @@
-# Beginner Wood Project Modeler Guide
+# Beginner Wood Project Modeler User Guide
 
-Use this guide with:
+This tool helps scouts and adult leaders turn a simple wood project idea into a 3D model and a cut list.
+
+Use the tool here:
 
 ```text
 /Users/paramraghavan/dev/beginners-3d-modelling/drag_drop_wood_modeler.html
 ```
 
-The tool now has two simple workflows:
-
-1. Choose an existing model and change each part's Length, Breadth, and Height.
-2. Start from scratch by drawing the front 2D view and side 2D view. The 3D preview updates as you draw.
-
-For most scout projects, start with an existing model. It is easier because the parts are already named, placed, and included in the cut list.
-
-## Open The Tool
+Recommended way to open it:
 
 ```bash
 cd /Users/paramraghavan/dev/beginners-3d-modelling
@@ -26,105 +21,149 @@ Then open:
 http://127.0.0.1:8766/drag_drop_wood_modeler.html
 ```
 
-## Main Screen
+## Start Here
 
-The screen has three areas:
+For most projects, do not draw from scratch first.
 
-- Left panel: model library, selected part editor, part list, and cut list.
-- Middle area: tabbed front and side 2D views. Only one is shown at a time so the drawing is larger.
-- Right area: live 3D preview with X/Y/Z axis arrows, floor, side/back wall guides, and a ceiling/project-top guide.
+Use this beginner workflow:
 
-## Five-Minute First Lesson
+1. Choose a preset from `Model library`.
+2. Click `Load model`.
+3. Click one board or panel in the part list, 2D drawing, or 3D preview.
+4. Change its `Length`, `Breadth`, or `Height`.
+5. Click `Apply dimensions`.
+6. If the selected part is plywood, use the support buttons:
+   - `Add cleats under`
+   - `Add sag bar under front`
+   - `Add base skids under`
+7. Review the cut list.
+8. Click `Export 3D HTML` when the model is ready.
 
-Use this before teaching drawing from scratch:
+Drawing from scratch is useful later, after the user understands how one part is sized and positioned.
 
-1. Load `Storage cubbies`.
-2. Select `Bottom panel`.
-3. Look at the 3D view. The bottom panel should sit above the skids.
-4. Click `Add sag bar under front`.
-5. Select the new sag bar in `Parts In Project`.
-6. Review its Length, Breadth, Height, and Y bottom values.
-7. Open the cut list and explain that each visible part becomes a real cut part.
+## What You See On The Screen
 
-This teaches the core loop: select a part, edit exact values, add support, and check the cut list.
+The screen has four main areas.
 
-## 3D Grounding Cues
+| Area | What It Is For |
+|---|---|
+| Top toolbar | Opens this user guide and reminds the user of the main workflow. |
+| Left panel | Load models, edit the selected part, add supports, review parts, and export. |
+| Middle panel | 2D front and side drawings. Use these to see Length, Breadth, and Height. |
+| Right panel | Live 3D preview with floor, wall, top guide, and X/Y/Z axis cues. |
 
-The 3D preview has reference guides so the project does not float in space:
+## The Most Important Idea
 
-- Red `X` arrow: length, left to right.
-- Green `Y` arrow: height, floor to ceiling.
-- Blue `Z` arrow: breadth/depth, front to back.
-- Tan floor plane: what touches the ground.
-- Faint side/back walls: help you see how close the project is to a wall.
-- Yellow top guide: helps you judge total height or ceiling clearance.
+Every wood piece is a rectangular part.
 
-If a part touches the tan floor plane, it is sitting on the ground. If it rises near the yellow top guide, check the final project height.
+![Front and side view dimension example](wood_dimensions_front_side_example.jpg)
+
+| Field | Meaning | Easy Way To Think About It |
+|---|---|---|
+| `Length` | Left-to-right size | How wide the board looks from the front |
+| `Breadth` | Front-to-back depth | How deep the board goes into the project |
+| `Height` | Bottom-to-top size | How tall or thick the part is |
+| `X left` | Left position | Where the part starts from the left |
+| `Z back` | Depth position | Where the part starts front-to-back |
+| `Y bottom` | Bottom position | How high the part starts above the floor |
 
 All measurements are in inches.
 
-## Length, Breadth, Height
+For a flat shelf board, thickness is usually `Height`, not `Breadth`.
 
-Use this meaning:
+Example:
 
-| Field | Meaning |
+```text
+Length: 36
+Breadth: 12
+Height: 0.75
+```
+
+This means the shelf is 36 inches wide, 12 inches deep, and 3/4 inch thick.
+
+For a vertical side panel, thickness is often `Length`.
+
+Example:
+
+```text
+Length: 0.75
+Breadth: 12
+Height: 24
+```
+
+This means the side panel is 3/4 inch thick, 12 inches deep, and 24 inches tall.
+
+## How The 2D Views Work
+
+The tool has two 2D views because a wood project has both width and depth.
+
+| View | Shows | Use It For |
+|---|---|---|
+| `Front view` | `Length x Height` | Shelves, sides, table legs, fronts, dividers |
+| `Side view` | `Breadth x Height` | Depth, side panels, how far shelves run front-to-back |
+
+When you draw in `Front view`, the new part uses the rectangle for `Length x Height`. It starts with the default `Breadth` value shown above the drawing area. Select the part and set `Breadth` to the real front-to-back depth.
+
+Example for a shelf panel:
+
+```text
+Draw in Front view: 36 wide x 0.75 high
+Then set Breadth: 12
+Final part: 36 Length x 12 Breadth x 0.75 Height
+```
+
+When you draw in `Side view`, the new part uses the side drawing for `Breadth x Height`. Then set `Length` in the selected part editor.
+
+Example for a side panel:
+
+```text
+Draw in Side view: 12 deep x 24 high
+Then set Length: 0.75
+Final part: 0.75 Length x 12 Breadth x 24 Height
+```
+
+## How The 3D View Works
+
+The 3D preview helps check whether the project makes physical sense.
+
+| Cue | Meaning |
 |---|---|
-| Length | Left-to-right size in the front view |
-| Breadth | Front-to-back size in the side view |
-| Height | Bottom-to-top size |
+| Red X | Length, left-to-right |
+| Green Y | Height, floor-to-top |
+| Blue Z | Breadth, front-to-back |
+| Tan plane | Floor or ground |
+| Blue wall planes | Side/back wall reference |
+| Yellow top guide | Project top or ceiling clearance |
 
-The position fields are:
+If a part touches the tan floor plane, it is sitting on the ground. For cubbies, shelves, and boxes with skids, usually only the skids should touch the floor.
 
-| Field | Meaning |
+To move the 3D view:
+
+| Action | Mouse Or Trackpad |
 |---|---|
-| X left | Where the part starts from the left |
-| Z back | Where the part starts from the back/front depth direction |
-| Y bottom | How high the bottom of the part sits |
+| Rotate | Drag inside the 3D preview |
+| Zoom | Scroll wheel or trackpad scroll |
+| Pan | Right-drag, or two-finger drag on some trackpads |
 
-## Workflow 1: Edit An Existing Model
-
-1. Choose a model from `Model library`.
-2. Click `Load model`.
-3. Click a part in `Parts In Project`, in the front/side 2D view, or in the 3D preview.
-4. Change `Length`, `Breadth`, or `Height`.
-5. Click `Apply dimensions`.
-6. Review the 2D views and 3D preview.
-7. If the selected part is plywood, use `Add cleats under`, `Add sag bar under front`, or `Add base skids under`.
-8. Use `Duplicate` when you need a matching part.
-9. Use `Delete` to remove a part.
-10. Review the cut list at the bottom of the left panel.
-11. Click `Export 3D HTML` when ready.
-
-## Model Library
-
-The current preset library includes:
-
-- Tabletop shelf with open center
-- Garden park bench
-- Simple table
-- Workbench
-- Bookcase
-- Shoe rack
-- Storage cubbies
-- Raised planter box
-- Picnic table
-- Step stool
-- Birdhouse
-- Tool caddy
-- Toy chest / blanket box
+Rotating the view does not change the wood model. It only changes the camera angle so you can inspect the front, side, back, top, and underside.
 
 ## Example 1: Customize An Existing Model
 
-Goal: start with `Storage cubbies`, make it wider, add one more middle support, and confirm the base skids stay under the project.
+Goal: load `Storage cubbies`, make it wider, add a second divider, and check the floor skids.
+
+### Step A: Load The Model
 
 1. In `Model library`, choose `Storage cubbies`.
 2. Click `Load model`.
-3. Look at the 3D preview:
-   - The tan plane is the floor.
-   - The brown skids should touch the floor.
-   - The bottom plywood panel should sit above the skids.
-4. Select `Top panel` from `Parts In Project`.
-5. Change:
+3. Look at the 3D preview.
+4. Confirm the brown base skids touch the floor.
+5. Confirm the bottom plywood panel sits above the skids.
+
+### Step B: Make The Cubbies Wider
+
+Select `Top panel`.
+
+Set:
 
 ```text
 Length: 60
@@ -135,9 +174,11 @@ Z back: 0
 Y bottom: 35.25
 ```
 
-6. Click `Apply dimensions`.
-7. Select `Bottom panel`.
-8. Change:
+Click `Apply dimensions`.
+
+Select `Bottom panel`.
+
+Set:
 
 ```text
 Length: 60
@@ -148,193 +189,228 @@ Z back: 0
 Y bottom: 1.5
 ```
 
-9. Click `Apply dimensions`.
-10. Select `Right side`.
-11. Move it to the new right edge:
+Click `Apply dimensions`.
+
+Select `Middle horizontal shelf`.
+
+Set:
+
+```text
+Length: 60
+```
+
+Click `Apply dimensions`.
+
+### Step C: Move The Right Side To The New Edge
+
+Select `Right side`.
+
+Set:
 
 ```text
 X left: 59.25
 Y bottom: 2.25
 ```
 
-12. Click `Apply dimensions`.
-13. Select `Middle horizontal shelf`.
-14. Change `Length` to `60`.
-15. Click `Apply dimensions`.
-16. Select `Center vertical divider`.
-17. Click `Duplicate`.
-18. Rename the copy to `Second vertical divider`.
-19. Move the new divider to:
+Click `Apply dimensions`.
+
+### Step D: Add A Second Divider
+
+Select `Center vertical divider`.
+
+Click `Duplicate`.
+
+Rename the copy:
+
+```text
+Second vertical divider
+```
+
+Set:
 
 ```text
 X left: 40
 Y bottom: 2.25
 ```
 
-20. Click `Apply dimensions`.
-21. Select `Back panel`.
-22. Change `Length` to `60`.
-23. Click `Apply dimensions`.
-24. Select `Base skid right`.
-25. Move it near the new right edge:
+Click `Apply dimensions`.
+
+### Step E: Fix Back And Skids
+
+Select `Back panel`.
+
+Set:
+
+```text
+Length: 60
+```
+
+Click `Apply dimensions`.
+
+Select `Base skid right`.
+
+Set:
 
 ```text
 X left: 54.5
 Y bottom: 0
 ```
 
-26. Click `Apply dimensions`.
-27. Select `Bottom panel`.
-28. Click `Add sag bar under front` if the widened bottom panel needs extra front support.
-29. Review the cut list. It should include the wider panels and the duplicated divider.
-30. Click `Export 3D HTML`.
+Click `Apply dimensions`.
 
-What to check:
+### Step F: Add Support
 
-- Only skids should touch the floor in this preset.
-- Bottom plywood should sit at `Y bottom: 1.5`.
-- Side panels and dividers should start at `Y bottom: 2.25`.
-- In front view, Length runs left-to-right.
-- In side view, Breadth runs front-to-back.
+Select `Bottom panel`.
 
-## Quick Example: Make The Garden Bench Longer
+Click `Add sag bar under front` if the widened bottom panel needs more support.
 
-1. Select `Garden park bench`.
-2. Click `Load model`.
-3. Select each seat slat and back slat.
-4. Change `Length` from `48` to `60`.
-5. Click `Apply dimensions` after each part.
-6. Select `Under-seat stretcher`.
-7. Change its `Length` so it still fits between the legs, such as `54`.
-8. Click `Apply dimensions`.
-9. Check the 3D view. Long slats may need extra stretchers or braces.
+Review the cut list. It should show the wider panels and the new divider.
 
-## One-Click Supports Under Plywood
+Check these values before building:
 
-Select a plywood shelf, top, bottom, deck, or panel. The selected part editor shows three support buttons:
+| Part Type | Correct Floor Position |
+|---|---|
+| Base skids | `Y bottom: 0` |
+| Bottom plywood | `Y bottom: 1.5` |
+| Side panels and dividers | `Y bottom: 2.25` |
 
-- `Add cleats under`: adds two 1x2-style cleats under the left and right plywood edges.
-- `Add sag bar under front`: adds a front lip/stiffener. On shelves it sits below the plywood; on bottom panels with skids it stays above the floor so skids remain the floor-contact parts.
-- `Add base skids under`: adds three base skids under a bottom panel and lifts the plywood if needed.
+## Example 2: Build A Simple Shelf From Scratch
 
-These buttons are disabled when the selected part is not a plywood panel. That keeps scouts from accidentally adding shelf supports under a leg or brace.
+Goal: make a simple 36 inch wide, 12 inch deep, 12 inch tall tabletop shelf.
 
-## Skids And Floor Contact
-
-In presets that include skids, the skids are the only pieces meant to touch the tan floor plane.
-
-Use this stack:
-
-1. Base skids at the floor.
-2. Bottom plywood panel above the skids.
-3. Side panels, dividers, and back panels above the bottom plywood.
-
-For example, in `Storage cubbies`, the base skids sit at `Y = 0`, the bottom panel sits above them, and the cubby walls sit on the bottom panel. This keeps the skids under the project instead of inside it.
-
-## Workflow 2: Draw A New Project From Scratch
-
-Use this workflow after the user understands presets. Drawing is useful for unusual projects, but it requires more measurement decisions.
-
-1. Click `Start blank`.
-2. Click `Draw board`.
-3. Click the `Front view` tab.
-4. Drag a rectangle. This creates a thin plywood-like part using Length and Height.
-5. Use the scrollbars if the drawing is larger than the visible area.
-6. The new part appears in the selected part editor.
-7. Set the exact `Length`, `Breadth`, and `Height`. Breadth is the 3D depth, so increase it only when the part should extend front-to-back.
-8. Use `X left`, `Z back`, and `Y bottom` to place it exactly.
-9. Draw more rectangles for shelves, sides, legs, braces, or top panels.
-10. Click the `Side view` tab when you want to draw or check Breadth and Height.
-11. Watch the 3D preview on the right. It joins the front and side information into a 3D model.
-
-## Example 2: Build A Simple Tabletop Shelf From Scratch
+### Step A: Start Blank
 
 1. Click `Start blank`.
 2. Click `Draw board`.
 3. Click `Front view`.
-4. Draw a long bottom rectangle.
-5. Set it to:
+
+### Step B: Draw The Bottom Panel
+
+Draw a long rectangle near the bottom.
+
+Select the new part and set:
 
 ```text
+Name: Bottom panel
 Length: 36
 Breadth: 12
 Height: 0.75
 X left: 0
 Z back: 0
 Y bottom: 0
+Material: Plywood
 ```
 
-The rectangle may first appear thin in 3D. That is expected. Set `Breadth` to `12` to give the shelf its real depth.
+Click `Apply dimensions`.
 
-6. Click `Duplicate`.
-7. Rename the duplicate to `Top panel`.
-8. Set the duplicate to:
+The part may look thin in 3D until `Breadth` is set to `12`.
+
+### Step C: Create The Top Panel
+
+Click `Duplicate`.
+
+Set:
 
 ```text
+Name: Top panel
 Length: 36
 Breadth: 12
 Height: 0.75
 X left: 0
 Z back: 0
 Y bottom: 12
+Material: Plywood
 ```
 
-9. Click `Apply dimensions`.
-10. Select the bottom panel.
-11. Click `Duplicate`.
-12. Rename the copy to `Left side panel`.
-13. Set it to:
+Click `Apply dimensions`.
+
+### Step D: Create The Left Side
+
+Select `Bottom panel`.
+
+Click `Duplicate`.
+
+Set:
 
 ```text
+Name: Left side panel
 Length: 0.75
 Breadth: 12
 Height: 12
 X left: 0
 Z back: 0
 Y bottom: 0.75
+Material: Plywood
 ```
 
-14. Click `Apply dimensions`.
-15. Click `Duplicate`.
-16. Rename the copy to `Right side panel`.
-17. Change only:
+Click `Apply dimensions`.
+
+### Step E: Create The Right Side
+
+Click `Duplicate`.
+
+Set:
 
 ```text
-X left: 35.25
-```
-
-18. Click `Apply dimensions`.
-19. Add a middle divider if needed:
-
-```text
-Name: Center divider
+Name: Right side panel
 Length: 0.75
 Breadth: 12
 Height: 12
-X left: 18
+X left: 35.25
 Z back: 0
 Y bottom: 0.75
+Material: Plywood
 ```
 
-20. Click `Side view` to check the Breadth and Height of the shelf.
-21. Select the bottom or top plywood and click `Add cleats under` or `Add sag bar under front`.
-22. Select the bottom panel and click `Add base skids under` if the shelf sits on the floor.
-23. Check the cut list.
-24. Export the 3D HTML model.
+Click `Apply dimensions`.
 
-What to check:
+### Step F: Add Supports
 
-- The bottom panel is horizontal.
-- The left and right side panels stand on the bottom panel.
-- Breadth is `12`, so the shelf has real depth in 3D.
-- Cleats and sag bars appear under plywood, not floating above it.
+Select `Bottom panel` or `Top panel`.
 
-## Support Advice
+Use one of these:
 
-The tool warns about common beginner design issues:
+| Button | When To Use |
+|---|---|
+| `Add cleats under` | To support plywood along the left and right edges |
+| `Add sag bar under front` | To stiffen a long shelf edge |
+| `Add base skids under` | To keep a floor shelf or cubby off the ground |
 
-- Long thin span: click `Add sag bar under front`.
-- Tall support: connect opposite legs with aprons or stretchers.
-- Floor contact: click `Add base skids under`.
+For a tabletop shelf, skids may not be needed. For a floor shelf, add skids under the bottom panel.
 
-These are reminders, not final engineering approval. A scout should review the plan with an adult woodworker before cutting lumber.
+### Step G: Check The Model
+
+1. Click `Front view`.
+2. Confirm the shelf is 36 inches wide and 12 inches tall.
+3. Click `Side view`.
+4. Confirm the shelf is 12 inches deep.
+5. Look at the 3D view.
+6. Confirm the sides stand on the bottom panel and the top sits above the sides.
+7. Review the cut list.
+8. Click `Export 3D HTML`.
+
+## One-Click Supports
+
+The support buttons work only when the selected part looks like a plywood shelf, top, bottom, deck, or panel.
+
+| Button | What It Adds |
+|---|---|
+| `Add cleats under` | Two narrow cleats under the plywood edges |
+| `Add sag bar under front` | A stiff front bar to reduce sag |
+| `Add base skids under` | Three base skids under a bottom panel |
+
+If the buttons are disabled, select a plywood shelf/top/bottom/panel first.
+
+## Common Beginner Checks
+
+Before cutting wood, check these items:
+
+1. Are all measurements in inches?
+2. Does every shelf or panel have the correct `Breadth`?
+3. Are floor skids at `Y bottom: 0`?
+4. Are bottom panels above the skids?
+5. Do long shelves have a sag bar or cleats?
+6. Do tall legs have aprons or stretchers connecting them?
+7. Does the cut list include every real piece you need to cut?
+
+This tool is a planning aid. Review the final design with an adult woodworker before buying lumber or cutting parts.

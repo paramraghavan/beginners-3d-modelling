@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Beginner Wood Project Modeler Guide</title>
+  <title>Beginner Wood Project Modeler User Guide</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -239,529 +239,563 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
-  <style>
-    :root {
-      --ink: #202124;
-      --muted: #5f665f;
-      --paper: #fffdf8;
-      --panel: #f4f1ea;
-      --line: #d7cfbf;
-      --accent: #2457a6;
-      --accent-soft: #eef4ff;
-    }
-    body {
-      margin: 0;
-      background: var(--panel);
-      color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      line-height: 1.55;
-    }
-    main, body > article, body > div {
-      max-width: 920px;
-      margin: 0 auto;
-      padding: 28px 28px 56px;
-      background: var(--paper);
-      min-height: 100vh;
-      box-shadow: 0 0 0 1px var(--line);
-    }
-    h1, h2, h3 {
-      line-height: 1.2;
-      color: #2a2117;
-    }
-    h1 {
-      margin-top: 0;
-      border-bottom: 3px solid var(--accent);
-      padding-bottom: 12px;
-    }
-    h2 {
-      margin-top: 34px;
-      border-top: 1px solid var(--line);
-      padding-top: 18px;
-    }
-    a { color: var(--accent); font-weight: 700; }
-    p, li { font-size: 16px; }
-    code {
-      background: var(--accent-soft);
-      border: 1px solid #c8daf8;
-      border-radius: 4px;
-      padding: 1px 4px;
-    }
-    pre {
-      background: #1f2630;
-      color: #f7f7f7;
-      padding: 14px 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-    }
-    pre code {
-      background: transparent;
-      border: 0;
-      padding: 0;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 14px 0 20px;
-    }
-    th, td {
-      border: 1px solid var(--line);
-      padding: 9px 10px;
-      text-align: left;
-      vertical-align: top;
-    }
-    th {
-      background: #efe8da;
-    }
-    blockquote {
-      margin: 18px 0;
-      padding: 12px 16px;
-      border-left: 4px solid var(--accent);
-      background: var(--accent-soft);
-      color: #24436d;
-    }
-    ol, ul { padding-left: 26px; }
-    @media print {
-      body { background: white; }
-      main, body > article, body > div {
-        box-shadow: none;
-        padding: 0;
-      }
-    }
-  </style>
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Beginner Wood Project Modeler Guide</h1>
+<h1 class="title">Beginner Wood Project Modeler User Guide</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
-<li><a href="#beginner-wood-project-modeler-guide"
-id="toc-beginner-wood-project-modeler-guide">Beginner Wood Project
-Modeler Guide</a>
+<li><a href="#beginner-wood-project-modeler-user-guide"
+id="toc-beginner-wood-project-modeler-user-guide">Beginner Wood Project
+Modeler User Guide</a>
 <ul>
-<li><a href="#open-the-tool" id="toc-open-the-tool">Open The
-Tool</a></li>
-<li><a href="#main-screen" id="toc-main-screen">Main Screen</a></li>
-<li><a href="#five-minute-first-lesson"
-id="toc-five-minute-first-lesson">Five-Minute First Lesson</a></li>
-<li><a href="#d-grounding-cues" id="toc-d-grounding-cues">3D Grounding
-Cues</a></li>
-<li><a href="#length-breadth-height"
-id="toc-length-breadth-height">Length, Breadth, Height</a></li>
-<li><a href="#workflow-1-edit-an-existing-model"
-id="toc-workflow-1-edit-an-existing-model">Workflow 1: Edit An Existing
-Model</a></li>
-<li><a href="#model-library" id="toc-model-library">Model
-Library</a></li>
+<li><a href="#start-here" id="toc-start-here">Start Here</a></li>
+<li><a href="#what-you-see-on-the-screen"
+id="toc-what-you-see-on-the-screen">What You See On The Screen</a></li>
+<li><a href="#the-most-important-idea"
+id="toc-the-most-important-idea">The Most Important Idea</a></li>
+<li><a href="#how-the-2d-views-work" id="toc-how-the-2d-views-work">How
+The 2D Views Work</a></li>
+<li><a href="#how-the-3d-view-works" id="toc-how-the-3d-view-works">How
+The 3D View Works</a></li>
 <li><a href="#example-1-customize-an-existing-model"
 id="toc-example-1-customize-an-existing-model">Example 1: Customize An
-Existing Model</a></li>
-<li><a href="#quick-example-make-the-garden-bench-longer"
-id="toc-quick-example-make-the-garden-bench-longer">Quick Example: Make
-The Garden Bench Longer</a></li>
-<li><a href="#one-click-supports-under-plywood"
-id="toc-one-click-supports-under-plywood">One-Click Supports Under
-Plywood</a></li>
-<li><a href="#skids-and-floor-contact"
-id="toc-skids-and-floor-contact">Skids And Floor Contact</a></li>
-<li><a href="#workflow-2-draw-a-new-project-from-scratch"
-id="toc-workflow-2-draw-a-new-project-from-scratch">Workflow 2: Draw A
-New Project From Scratch</a></li>
-<li><a href="#example-2-build-a-simple-tabletop-shelf-from-scratch"
-id="toc-example-2-build-a-simple-tabletop-shelf-from-scratch">Example 2:
-Build A Simple Tabletop Shelf From Scratch</a></li>
-<li><a href="#support-advice" id="toc-support-advice">Support
-Advice</a></li>
+Existing Model</a>
+<ul>
+<li><a href="#step-a-load-the-model" id="toc-step-a-load-the-model">Step
+A: Load The Model</a></li>
+<li><a href="#step-b-make-the-cubbies-wider"
+id="toc-step-b-make-the-cubbies-wider">Step B: Make The Cubbies
+Wider</a></li>
+<li><a href="#step-c-move-the-right-side-to-the-new-edge"
+id="toc-step-c-move-the-right-side-to-the-new-edge">Step C: Move The
+Right Side To The New Edge</a></li>
+<li><a href="#step-d-add-a-second-divider"
+id="toc-step-d-add-a-second-divider">Step D: Add A Second
+Divider</a></li>
+<li><a href="#step-e-fix-back-and-skids"
+id="toc-step-e-fix-back-and-skids">Step E: Fix Back And Skids</a></li>
+<li><a href="#step-f-add-support" id="toc-step-f-add-support">Step F:
+Add Support</a></li>
+</ul></li>
+<li><a href="#example-2-build-a-simple-shelf-from-scratch"
+id="toc-example-2-build-a-simple-shelf-from-scratch">Example 2: Build A
+Simple Shelf From Scratch</a>
+<ul>
+<li><a href="#step-a-start-blank" id="toc-step-a-start-blank">Step A:
+Start Blank</a></li>
+<li><a href="#step-b-draw-the-bottom-panel"
+id="toc-step-b-draw-the-bottom-panel">Step B: Draw The Bottom
+Panel</a></li>
+<li><a href="#step-c-create-the-top-panel"
+id="toc-step-c-create-the-top-panel">Step C: Create The Top
+Panel</a></li>
+<li><a href="#step-d-create-the-left-side"
+id="toc-step-d-create-the-left-side">Step D: Create The Left
+Side</a></li>
+<li><a href="#step-e-create-the-right-side"
+id="toc-step-e-create-the-right-side">Step E: Create The Right
+Side</a></li>
+<li><a href="#step-f-add-supports" id="toc-step-f-add-supports">Step F:
+Add Supports</a></li>
+<li><a href="#step-g-check-the-model"
+id="toc-step-g-check-the-model">Step G: Check The Model</a></li>
+</ul></li>
+<li><a href="#one-click-supports" id="toc-one-click-supports">One-Click
+Supports</a></li>
+<li><a href="#common-beginner-checks"
+id="toc-common-beginner-checks">Common Beginner Checks</a></li>
 </ul></li>
 </ul>
 </nav>
-<h1 id="beginner-wood-project-modeler-guide">Beginner Wood Project
-Modeler Guide</h1>
-<p>Use this guide with:</p>
+<h1 id="beginner-wood-project-modeler-user-guide">Beginner Wood Project
+Modeler User Guide</h1>
+<p>This tool helps scouts and adult leaders turn a simple wood project
+idea into a 3D model and a cut list.</p>
+<p>Use the tool here:</p>
 <pre class="text"><code>/Users/paramraghavan/dev/beginners-3d-modelling/drag_drop_wood_modeler.html</code></pre>
-<p>The tool now has two simple workflows:</p>
-<ol type="1">
-<li>Choose an existing model and change each part’s Length, Breadth, and
-Height.</li>
-<li>Start from scratch by drawing the front 2D view and side 2D view.
-The 3D preview updates as you draw.</li>
-</ol>
-<p>For most scout projects, start with an existing model. It is easier
-because the parts are already named, placed, and included in the cut
-list.</p>
-<h2 id="open-the-tool">Open The Tool</h2>
+<p>Recommended way to open it:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/paramraghavan/dev/beginners-3d-modelling</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> http.server 8766</span></code></pre></div>
 <p>Then open:</p>
 <pre class="text"><code>http://127.0.0.1:8766/drag_drop_wood_modeler.html</code></pre>
-<h2 id="main-screen">Main Screen</h2>
-<p>The screen has three areas:</p>
-<ul>
-<li>Left panel: model library, selected part editor, part list, and cut
-list.</li>
-<li>Middle area: tabbed front and side 2D views. Only one is shown at a
-time so the drawing is larger.</li>
-<li>Right area: live 3D preview with X/Y/Z axis arrows, floor, side/back
-wall guides, and a ceiling/project-top guide.</li>
-</ul>
-<h2 id="five-minute-first-lesson">Five-Minute First Lesson</h2>
-<p>Use this before teaching drawing from scratch:</p>
+<h2 id="start-here">Start Here</h2>
+<p>For most projects, do not draw from scratch first.</p>
+<p>Use this beginner workflow:</p>
 <ol type="1">
-<li>Load <code>Storage cubbies</code>.</li>
-<li>Select <code>Bottom panel</code>.</li>
-<li>Look at the 3D view. The bottom panel should sit above the
-skids.</li>
-<li>Click <code>Add sag bar under front</code>.</li>
-<li>Select the new sag bar in <code>Parts In Project</code>.</li>
-<li>Review its Length, Breadth, Height, and Y bottom values.</li>
-<li>Open the cut list and explain that each visible part becomes a real
-cut part.</li>
-</ol>
-<p>This teaches the core loop: select a part, edit exact values, add
-support, and check the cut list.</p>
-<h2 id="d-grounding-cues">3D Grounding Cues</h2>
-<p>The 3D preview has reference guides so the project does not float in
-space:</p>
+<li>Choose a preset from <code>Model library</code>.</li>
+<li>Click <code>Load model</code>.</li>
+<li>Click one board or panel in the part list, 2D drawing, or 3D
+preview.</li>
+<li>Change its <code>Length</code>, <code>Breadth</code>, or
+<code>Height</code>.</li>
+<li>Click <code>Apply dimensions</code>.</li>
+<li>If the selected part is plywood, use the support buttons:
 <ul>
-<li>Red <code>X</code> arrow: length, left to right.</li>
-<li>Green <code>Y</code> arrow: height, floor to ceiling.</li>
-<li>Blue <code>Z</code> arrow: breadth/depth, front to back.</li>
-<li>Tan floor plane: what touches the ground.</li>
-<li>Faint side/back walls: help you see how close the project is to a
-wall.</li>
-<li>Yellow top guide: helps you judge total height or ceiling
-clearance.</li>
-</ul>
-<p>If a part touches the tan floor plane, it is sitting on the ground.
-If it rises near the yellow top guide, check the final project
-height.</p>
-<p>All measurements are in inches.</p>
-<h2 id="length-breadth-height">Length, Breadth, Height</h2>
-<p>Use this meaning:</p>
+<li><code>Add cleats under</code></li>
+<li><code>Add sag bar under front</code></li>
+<li><code>Add base skids under</code></li>
+</ul></li>
+<li>Review the cut list.</li>
+<li>Click <code>Export 3D HTML</code> when the model is ready.</li>
+</ol>
+<p>Drawing from scratch is useful later, after the user understands how
+one part is sized and positioned.</p>
+<h2 id="what-you-see-on-the-screen">What You See On The Screen</h2>
+<p>The screen has four main areas.</p>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
-<th>Field</th>
-<th>Meaning</th>
+<th>Area</th>
+<th>What It Is For</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Length</td>
-<td>Left-to-right size in the front view</td>
+<td>Top toolbar</td>
+<td>Opens this user guide and reminds the user of the main
+workflow.</td>
 </tr>
 <tr>
-<td>Breadth</td>
-<td>Front-to-back size in the side view</td>
+<td>Left panel</td>
+<td>Load models, edit the selected part, add supports, review parts, and
+export.</td>
 </tr>
 <tr>
-<td>Height</td>
-<td>Bottom-to-top size</td>
+<td>Middle panel</td>
+<td>2D front and side drawings. Use these to see Length, Breadth, and
+Height.</td>
+</tr>
+<tr>
+<td>Right panel</td>
+<td>Live 3D preview with floor, wall, top guide, and X/Y/Z axis
+cues.</td>
 </tr>
 </tbody>
 </table>
-<p>The position fields are:</p>
+<h2 id="the-most-important-idea">The Most Important Idea</h2>
+<p>Every wood piece is a rectangular part.</p>
+<figure>
+<img src="wood_dimensions_front_side_example.jpg"
+alt="Front and side view dimension example" />
+<figcaption aria-hidden="true">Front and side view dimension
+example</figcaption>
+</figure>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
 <th>Meaning</th>
+<th>Easy Way To Think About It</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>X left</td>
+<td><code>Length</code></td>
+<td>Left-to-right size</td>
+<td>How wide the board looks from the front</td>
+</tr>
+<tr>
+<td><code>Breadth</code></td>
+<td>Front-to-back depth</td>
+<td>How deep the board goes into the project</td>
+</tr>
+<tr>
+<td><code>Height</code></td>
+<td>Bottom-to-top size</td>
+<td>How tall or thick the part is</td>
+</tr>
+<tr>
+<td><code>X left</code></td>
+<td>Left position</td>
 <td>Where the part starts from the left</td>
 </tr>
 <tr>
-<td>Z back</td>
-<td>Where the part starts from the back/front depth direction</td>
+<td><code>Z back</code></td>
+<td>Depth position</td>
+<td>Where the part starts front-to-back</td>
 </tr>
 <tr>
-<td>Y bottom</td>
-<td>How high the bottom of the part sits</td>
+<td><code>Y bottom</code></td>
+<td>Bottom position</td>
+<td>How high the part starts above the floor</td>
 </tr>
 </tbody>
 </table>
-<h2 id="workflow-1-edit-an-existing-model">Workflow 1: Edit An Existing
-Model</h2>
-<ol type="1">
-<li>Choose a model from <code>Model library</code>.</li>
-<li>Click <code>Load model</code>.</li>
-<li>Click a part in <code>Parts In Project</code>, in the front/side 2D
-view, or in the 3D preview.</li>
-<li>Change <code>Length</code>, <code>Breadth</code>, or
-<code>Height</code>.</li>
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Review the 2D views and 3D preview.</li>
-<li>If the selected part is plywood, use <code>Add cleats under</code>,
-<code>Add sag bar under front</code>, or
-<code>Add base skids under</code>.</li>
-<li>Use <code>Duplicate</code> when you need a matching part.</li>
-<li>Use <code>Delete</code> to remove a part.</li>
-<li>Review the cut list at the bottom of the left panel.</li>
-<li>Click <code>Export 3D HTML</code> when ready.</li>
-</ol>
-<h2 id="model-library">Model Library</h2>
-<p>The current preset library includes:</p>
-<ul>
-<li>Tabletop shelf with open center</li>
-<li>Garden park bench</li>
-<li>Simple table</li>
-<li>Workbench</li>
-<li>Bookcase</li>
-<li>Shoe rack</li>
-<li>Storage cubbies</li>
-<li>Raised planter box</li>
-<li>Picnic table</li>
-<li>Step stool</li>
-<li>Birdhouse</li>
-<li>Tool caddy</li>
-<li>Toy chest / blanket box</li>
-</ul>
+<p>All measurements are in inches.</p>
+<p>For a flat shelf board, thickness is usually <code>Height</code>, not
+<code>Breadth</code>.</p>
+<p>Example:</p>
+<pre class="text"><code>Length: 36
+Breadth: 12
+Height: 0.75</code></pre>
+<p>This means the shelf is 36 inches wide, 12 inches deep, and 3/4 inch
+thick.</p>
+<p>For a vertical side panel, thickness is often
+<code>Length</code>.</p>
+<p>Example:</p>
+<pre class="text"><code>Length: 0.75
+Breadth: 12
+Height: 24</code></pre>
+<p>This means the side panel is 3/4 inch thick, 12 inches deep, and 24
+inches tall.</p>
+<h2 id="how-the-2d-views-work">How The 2D Views Work</h2>
+<p>The tool has two 2D views because a wood project has both width and
+depth.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>View</th>
+<th>Shows</th>
+<th>Use It For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Front view</code></td>
+<td><code>Length x Height</code></td>
+<td>Shelves, sides, table legs, fronts, dividers</td>
+</tr>
+<tr>
+<td><code>Side view</code></td>
+<td><code>Breadth x Height</code></td>
+<td>Depth, side panels, how far shelves run front-to-back</td>
+</tr>
+</tbody>
+</table>
+<p>When you draw in <code>Front view</code>, the new part uses the
+rectangle for <code>Length x Height</code>. It starts with the default
+<code>Breadth</code> value shown above the drawing area. Select the part
+and set <code>Breadth</code> to the real front-to-back depth.</p>
+<p>Example for a shelf panel:</p>
+<pre class="text"><code>Draw in Front view: 36 wide x 0.75 high
+Then set Breadth: 12
+Final part: 36 Length x 12 Breadth x 0.75 Height</code></pre>
+<p>When you draw in <code>Side view</code>, the new part uses the side
+drawing for <code>Breadth x Height</code>. Then set <code>Length</code>
+in the selected part editor.</p>
+<p>Example for a side panel:</p>
+<pre class="text"><code>Draw in Side view: 12 deep x 24 high
+Then set Length: 0.75
+Final part: 0.75 Length x 12 Breadth x 24 Height</code></pre>
+<h2 id="how-the-3d-view-works">How The 3D View Works</h2>
+<p>The 3D preview helps check whether the project makes physical
+sense.</p>
+<table>
+<thead>
+<tr>
+<th>Cue</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Red X</td>
+<td>Length, left-to-right</td>
+</tr>
+<tr>
+<td>Green Y</td>
+<td>Height, floor-to-top</td>
+</tr>
+<tr>
+<td>Blue Z</td>
+<td>Breadth, front-to-back</td>
+</tr>
+<tr>
+<td>Tan plane</td>
+<td>Floor or ground</td>
+</tr>
+<tr>
+<td>Blue wall planes</td>
+<td>Side/back wall reference</td>
+</tr>
+<tr>
+<td>Yellow top guide</td>
+<td>Project top or ceiling clearance</td>
+</tr>
+</tbody>
+</table>
+<p>If a part touches the tan floor plane, it is sitting on the ground.
+For cubbies, shelves, and boxes with skids, usually only the skids
+should touch the floor.</p>
+<p>To move the 3D view:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Mouse Or Trackpad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rotate</td>
+<td>Drag inside the 3D preview</td>
+</tr>
+<tr>
+<td>Zoom</td>
+<td>Scroll wheel or trackpad scroll</td>
+</tr>
+<tr>
+<td>Pan</td>
+<td>Right-drag, or two-finger drag on some trackpads</td>
+</tr>
+</tbody>
+</table>
+<p>Rotating the view does not change the wood model. It only changes the
+camera angle so you can inspect the front, side, back, top, and
+underside.</p>
 <h2 id="example-1-customize-an-existing-model">Example 1: Customize An
 Existing Model</h2>
-<p>Goal: start with <code>Storage cubbies</code>, make it wider, add one
-more middle support, and confirm the base skids stay under the
-project.</p>
+<p>Goal: load <code>Storage cubbies</code>, make it wider, add a second
+divider, and check the floor skids.</p>
+<h3 id="step-a-load-the-model">Step A: Load The Model</h3>
 <ol type="1">
 <li>In <code>Model library</code>, choose
 <code>Storage cubbies</code>.</li>
 <li>Click <code>Load model</code>.</li>
-<li>Look at the 3D preview:
-<ul>
-<li>The tan plane is the floor.</li>
-<li>The brown skids should touch the floor.</li>
-<li>The bottom plywood panel should sit above the skids.</li>
-</ul></li>
-<li>Select <code>Top panel</code> from
-<code>Parts In Project</code>.</li>
-<li>Change:</li>
+<li>Look at the 3D preview.</li>
+<li>Confirm the brown base skids touch the floor.</li>
+<li>Confirm the bottom plywood panel sits above the skids.</li>
 </ol>
+<h3 id="step-b-make-the-cubbies-wider">Step B: Make The Cubbies
+Wider</h3>
+<p>Select <code>Top panel</code>.</p>
+<p>Set:</p>
 <pre class="text"><code>Length: 60
 Breadth: 15
 Height: 0.75
 X left: 0
 Z back: 0
 Y bottom: 35.25</code></pre>
-<ol start="6" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Bottom panel</code>.</li>
-<li>Change:</li>
-</ol>
+<p>Click <code>Apply dimensions</code>.</p>
+<p>Select <code>Bottom panel</code>.</p>
+<p>Set:</p>
 <pre class="text"><code>Length: 60
 Breadth: 15
 Height: 0.75
 X left: 0
 Z back: 0
 Y bottom: 1.5</code></pre>
-<ol start="9" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Right side</code>.</li>
-<li>Move it to the new right edge:</li>
-</ol>
+<p>Click <code>Apply dimensions</code>.</p>
+<p>Select <code>Middle horizontal shelf</code>.</p>
+<p>Set:</p>
+<pre class="text"><code>Length: 60</code></pre>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-c-move-the-right-side-to-the-new-edge">Step C: Move The
+Right Side To The New Edge</h3>
+<p>Select <code>Right side</code>.</p>
+<p>Set:</p>
 <pre class="text"><code>X left: 59.25
 Y bottom: 2.25</code></pre>
-<ol start="12" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Middle horizontal shelf</code>.</li>
-<li>Change <code>Length</code> to <code>60</code>.</li>
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Center vertical divider</code>.</li>
-<li>Click <code>Duplicate</code>.</li>
-<li>Rename the copy to <code>Second vertical divider</code>.</li>
-<li>Move the new divider to:</li>
-</ol>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-d-add-a-second-divider">Step D: Add A Second Divider</h3>
+<p>Select <code>Center vertical divider</code>.</p>
+<p>Click <code>Duplicate</code>.</p>
+<p>Rename the copy:</p>
+<pre class="text"><code>Second vertical divider</code></pre>
+<p>Set:</p>
 <pre class="text"><code>X left: 40
 Y bottom: 2.25</code></pre>
-<ol start="20" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Back panel</code>.</li>
-<li>Change <code>Length</code> to <code>60</code>.</li>
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Base skid right</code>.</li>
-<li>Move it near the new right edge:</li>
-</ol>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-e-fix-back-and-skids">Step E: Fix Back And Skids</h3>
+<p>Select <code>Back panel</code>.</p>
+<p>Set:</p>
+<pre class="text"><code>Length: 60</code></pre>
+<p>Click <code>Apply dimensions</code>.</p>
+<p>Select <code>Base skid right</code>.</p>
+<p>Set:</p>
 <pre class="text"><code>X left: 54.5
 Y bottom: 0</code></pre>
-<ol start="26" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select <code>Bottom panel</code>.</li>
-<li>Click <code>Add sag bar under front</code> if the widened bottom
-panel needs extra front support.</li>
-<li>Review the cut list. It should include the wider panels and the
-duplicated divider.</li>
-<li>Click <code>Export 3D HTML</code>.</li>
-</ol>
-<p>What to check:</p>
-<ul>
-<li>Only skids should touch the floor in this preset.</li>
-<li>Bottom plywood should sit at <code>Y bottom: 1.5</code>.</li>
-<li>Side panels and dividers should start at
-<code>Y bottom: 2.25</code>.</li>
-<li>In front view, Length runs left-to-right.</li>
-<li>In side view, Breadth runs front-to-back.</li>
-</ul>
-<h2 id="quick-example-make-the-garden-bench-longer">Quick Example: Make
-The Garden Bench Longer</h2>
-<ol type="1">
-<li>Select <code>Garden park bench</code>.</li>
-<li>Click <code>Load model</code>.</li>
-<li>Select each seat slat and back slat.</li>
-<li>Change <code>Length</code> from <code>48</code> to
-<code>60</code>.</li>
-<li>Click <code>Apply dimensions</code> after each part.</li>
-<li>Select <code>Under-seat stretcher</code>.</li>
-<li>Change its <code>Length</code> so it still fits between the legs,
-such as <code>54</code>.</li>
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Check the 3D view. Long slats may need extra stretchers or
-braces.</li>
-</ol>
-<h2 id="one-click-supports-under-plywood">One-Click Supports Under
-Plywood</h2>
-<p>Select a plywood shelf, top, bottom, deck, or panel. The selected
-part editor shows three support buttons:</p>
-<ul>
-<li><code>Add cleats under</code>: adds two 1x2-style cleats under the
-left and right plywood edges.</li>
-<li><code>Add sag bar under front</code>: adds a front lip/stiffener. On
-shelves it sits below the plywood; on bottom panels with skids it stays
-above the floor so skids remain the floor-contact parts.</li>
-<li><code>Add base skids under</code>: adds three base skids under a
-bottom panel and lifts the plywood if needed.</li>
-</ul>
-<p>These buttons are disabled when the selected part is not a plywood
-panel. That keeps scouts from accidentally adding shelf supports under a
-leg or brace.</p>
-<h2 id="skids-and-floor-contact">Skids And Floor Contact</h2>
-<p>In presets that include skids, the skids are the only pieces meant to
-touch the tan floor plane.</p>
-<p>Use this stack:</p>
-<ol type="1">
-<li>Base skids at the floor.</li>
-<li>Bottom plywood panel above the skids.</li>
-<li>Side panels, dividers, and back panels above the bottom
-plywood.</li>
-</ol>
-<p>For example, in <code>Storage cubbies</code>, the base skids sit at
-<code>Y = 0</code>, the bottom panel sits above them, and the cubby
-walls sit on the bottom panel. This keeps the skids under the project
-instead of inside it.</p>
-<h2 id="workflow-2-draw-a-new-project-from-scratch">Workflow 2: Draw A
-New Project From Scratch</h2>
-<p>Use this workflow after the user understands presets. Drawing is
-useful for unusual projects, but it requires more measurement
-decisions.</p>
-<ol type="1">
-<li>Click <code>Start blank</code>.</li>
-<li>Click <code>Draw board</code>.</li>
-<li>Click the <code>Front view</code> tab.</li>
-<li>Drag a rectangle. This creates a thin plywood-like part using Length
-and Height.</li>
-<li>Use the scrollbars if the drawing is larger than the visible
-area.</li>
-<li>The new part appears in the selected part editor.</li>
-<li>Set the exact <code>Length</code>, <code>Breadth</code>, and
-<code>Height</code>. Breadth is the 3D depth, so increase it only when
-the part should extend front-to-back.</li>
-<li>Use <code>X left</code>, <code>Z back</code>, and
-<code>Y bottom</code> to place it exactly.</li>
-<li>Draw more rectangles for shelves, sides, legs, braces, or top
-panels.</li>
-<li>Click the <code>Side view</code> tab when you want to draw or check
-Breadth and Height.</li>
-<li>Watch the 3D preview on the right. It joins the front and side
-information into a 3D model.</li>
-</ol>
-<h2 id="example-2-build-a-simple-tabletop-shelf-from-scratch">Example 2:
-Build A Simple Tabletop Shelf From Scratch</h2>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-f-add-support">Step F: Add Support</h3>
+<p>Select <code>Bottom panel</code>.</p>
+<p>Click <code>Add sag bar under front</code> if the widened bottom
+panel needs more support.</p>
+<p>Review the cut list. It should show the wider panels and the new
+divider.</p>
+<p>Check these values before building:</p>
+<table>
+<thead>
+<tr>
+<th>Part Type</th>
+<th>Correct Floor Position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base skids</td>
+<td><code>Y bottom: 0</code></td>
+</tr>
+<tr>
+<td>Bottom plywood</td>
+<td><code>Y bottom: 1.5</code></td>
+</tr>
+<tr>
+<td>Side panels and dividers</td>
+<td><code>Y bottom: 2.25</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="example-2-build-a-simple-shelf-from-scratch">Example 2: Build A
+Simple Shelf From Scratch</h2>
+<p>Goal: make a simple 36 inch wide, 12 inch deep, 12 inch tall tabletop
+shelf.</p>
+<h3 id="step-a-start-blank">Step A: Start Blank</h3>
 <ol type="1">
 <li>Click <code>Start blank</code>.</li>
 <li>Click <code>Draw board</code>.</li>
 <li>Click <code>Front view</code>.</li>
-<li>Draw a long bottom rectangle.</li>
-<li>Set it to:</li>
 </ol>
-<pre class="text"><code>Length: 36
+<h3 id="step-b-draw-the-bottom-panel">Step B: Draw The Bottom Panel</h3>
+<p>Draw a long rectangle near the bottom.</p>
+<p>Select the new part and set:</p>
+<pre class="text"><code>Name: Bottom panel
+Length: 36
 Breadth: 12
 Height: 0.75
 X left: 0
 Z back: 0
-Y bottom: 0</code></pre>
-<p>The rectangle may first appear thin in 3D. That is expected. Set
-<code>Breadth</code> to <code>12</code> to give the shelf its real
-depth.</p>
-<ol start="6" type="1">
-<li>Click <code>Duplicate</code>.</li>
-<li>Rename the duplicate to <code>Top panel</code>.</li>
-<li>Set the duplicate to:</li>
-</ol>
-<pre class="text"><code>Length: 36
+Y bottom: 0
+Material: Plywood</code></pre>
+<p>Click <code>Apply dimensions</code>.</p>
+<p>The part may look thin in 3D until <code>Breadth</code> is set to
+<code>12</code>.</p>
+<h3 id="step-c-create-the-top-panel">Step C: Create The Top Panel</h3>
+<p>Click <code>Duplicate</code>.</p>
+<p>Set:</p>
+<pre class="text"><code>Name: Top panel
+Length: 36
 Breadth: 12
 Height: 0.75
 X left: 0
 Z back: 0
-Y bottom: 12</code></pre>
-<ol start="9" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Select the bottom panel.</li>
-<li>Click <code>Duplicate</code>.</li>
-<li>Rename the copy to <code>Left side panel</code>.</li>
-<li>Set it to:</li>
-</ol>
-<pre class="text"><code>Length: 0.75
-Breadth: 12
-Height: 12
-X left: 0
-Z back: 0
-Y bottom: 0.75</code></pre>
-<ol start="14" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Click <code>Duplicate</code>.</li>
-<li>Rename the copy to <code>Right side panel</code>.</li>
-<li>Change only:</li>
-</ol>
-<pre class="text"><code>X left: 35.25</code></pre>
-<ol start="18" type="1">
-<li>Click <code>Apply dimensions</code>.</li>
-<li>Add a middle divider if needed:</li>
-</ol>
-<pre class="text"><code>Name: Center divider
+Y bottom: 12
+Material: Plywood</code></pre>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-d-create-the-left-side">Step D: Create The Left Side</h3>
+<p>Select <code>Bottom panel</code>.</p>
+<p>Click <code>Duplicate</code>.</p>
+<p>Set:</p>
+<pre class="text"><code>Name: Left side panel
 Length: 0.75
 Breadth: 12
 Height: 12
-X left: 18
+X left: 0
 Z back: 0
-Y bottom: 0.75</code></pre>
-<ol start="20" type="1">
-<li>Click <code>Side view</code> to check the Breadth and Height of the
-shelf.</li>
-<li>Select the bottom or top plywood and click
-<code>Add cleats under</code> or
-<code>Add sag bar under front</code>.</li>
-<li>Select the bottom panel and click <code>Add base skids under</code>
-if the shelf sits on the floor.</li>
-<li>Check the cut list.</li>
-<li>Export the 3D HTML model.</li>
+Y bottom: 0.75
+Material: Plywood</code></pre>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-e-create-the-right-side">Step E: Create The Right Side</h3>
+<p>Click <code>Duplicate</code>.</p>
+<p>Set:</p>
+<pre class="text"><code>Name: Right side panel
+Length: 0.75
+Breadth: 12
+Height: 12
+X left: 35.25
+Z back: 0
+Y bottom: 0.75
+Material: Plywood</code></pre>
+<p>Click <code>Apply dimensions</code>.</p>
+<h3 id="step-f-add-supports">Step F: Add Supports</h3>
+<p>Select <code>Bottom panel</code> or <code>Top panel</code>.</p>
+<p>Use one of these:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Button</th>
+<th>When To Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Add cleats under</code></td>
+<td>To support plywood along the left and right edges</td>
+</tr>
+<tr>
+<td><code>Add sag bar under front</code></td>
+<td>To stiffen a long shelf edge</td>
+</tr>
+<tr>
+<td><code>Add base skids under</code></td>
+<td>To keep a floor shelf or cubby off the ground</td>
+</tr>
+</tbody>
+</table>
+<p>For a tabletop shelf, skids may not be needed. For a floor shelf, add
+skids under the bottom panel.</p>
+<h3 id="step-g-check-the-model">Step G: Check The Model</h3>
+<ol type="1">
+<li>Click <code>Front view</code>.</li>
+<li>Confirm the shelf is 36 inches wide and 12 inches tall.</li>
+<li>Click <code>Side view</code>.</li>
+<li>Confirm the shelf is 12 inches deep.</li>
+<li>Look at the 3D view.</li>
+<li>Confirm the sides stand on the bottom panel and the top sits above
+the sides.</li>
+<li>Review the cut list.</li>
+<li>Click <code>Export 3D HTML</code>.</li>
 </ol>
-<p>What to check:</p>
-<ul>
-<li>The bottom panel is horizontal.</li>
-<li>The left and right side panels stand on the bottom panel.</li>
-<li>Breadth is <code>12</code>, so the shelf has real depth in 3D.</li>
-<li>Cleats and sag bars appear under plywood, not floating above
-it.</li>
-</ul>
-<h2 id="support-advice">Support Advice</h2>
-<p>The tool warns about common beginner design issues:</p>
-<ul>
-<li>Long thin span: click <code>Add sag bar under front</code>.</li>
-<li>Tall support: connect opposite legs with aprons or stretchers.</li>
-<li>Floor contact: click <code>Add base skids under</code>.</li>
-</ul>
-<p>These are reminders, not final engineering approval. A scout should
-review the plan with an adult woodworker before cutting lumber.</p>
+<h2 id="one-click-supports">One-Click Supports</h2>
+<p>The support buttons work only when the selected part looks like a
+plywood shelf, top, bottom, deck, or panel.</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>What It Adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Add cleats under</code></td>
+<td>Two narrow cleats under the plywood edges</td>
+</tr>
+<tr>
+<td><code>Add sag bar under front</code></td>
+<td>A stiff front bar to reduce sag</td>
+</tr>
+<tr>
+<td><code>Add base skids under</code></td>
+<td>Three base skids under a bottom panel</td>
+</tr>
+</tbody>
+</table>
+<p>If the buttons are disabled, select a plywood shelf/top/bottom/panel
+first.</p>
+<h2 id="common-beginner-checks">Common Beginner Checks</h2>
+<p>Before cutting wood, check these items:</p>
+<ol type="1">
+<li>Are all measurements in inches?</li>
+<li>Does every shelf or panel have the correct
+<code>Breadth</code>?</li>
+<li>Are floor skids at <code>Y bottom: 0</code>?</li>
+<li>Are bottom panels above the skids?</li>
+<li>Do long shelves have a sag bar or cleats?</li>
+<li>Do tall legs have aprons or stretchers connecting them?</li>
+<li>Does the cut list include every real piece you need to cut?</li>
+</ol>
+<p>This tool is a planning aid. Review the final design with an adult
+woodworker before buying lumber or cutting parts.</p>
 </body>
 </html>
